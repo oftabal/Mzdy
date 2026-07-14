@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>▦ QR PLATBY ForVision OPTIKA</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+ margin:0;
+ font-family:-apple-system,Segoe UI,Arial,sans-serif;
+ background:linear-gradient(180deg,#eef2f7,#f8fafc);
+}
+.wrap{max-width:760px;margin:auto;padding:4px;}
+.card{
+ background:white;
+ padding:8px;
+ border-radius:28px;
+ box-shadow:0 20px 60px rgba(0,0,0,0.08);
+}
+.header{
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ gap:10px;
+ margin-bottom:15px;
+}
+input{
+ width:100%;
+ padding:8px;
+ border-radius:14px;
+ border:1px solid #e5e7eb;
+ font-size:16px;
+ box-sizing:border-box;
+ margin-bottom:10px;
+}
+button{
+ padding:10px;
+ border:none;
+ border-radius:14px;
+ cursor:pointer;
+ font-weight:500;
+}
+.qrbtn{
+ background:linear-gradient(135deg,#2563eb,#0ea5e9);
+ color:white;
+ width:100%;
+ font-size:16px;
+ padding:10px;
+ margin-top:8px;
+}
+.row{
+ display:grid;
+ grid-template-columns:repeat(8,1fr);
+ gap:4px;
+ margin-top:15px;
+}
+.action-grid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:6px;
+ margin-top:8px;
+}
+.green{background:#10b981;color:white;}
+.dark{background:#374151;color:white;}
+.red{background:#ef4444;color:white;}
+.gray{background:#6b7280;color:white;}
+.qrkniha{background:#7c3aed;color:white;font-weight:bold;}
+.type-grid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:4px;
+ margin-top:6px;
+}
+.type-btn{
+  background:#f1f5f9;
+  padding:4px;
+  font-size:11px;
+  border-radius:8px;
+}
+.type-btn.active{
+  background:#2563eb;
+  color:white;
+}
+table{
+ width:100%;
+ border-collapse:collapse;
+ margin-top:10px;
+}
+td,th{
+ border:1px solid #eee;
+ padding:4px;
+ font-size:12px;
+ text-align:center;
+}
+tr:hover{
+ background:#f3f4f6;
+ cursor:pointer;
+}
+.delbtn{
+ background:#ef4444;
+ color:white;
+ border:none;
+ border-radius:10px;
+ padding:8px 10px;
+}
+.printbtn{
+ background:#374151;
+ color:white;
+ border:none;
+ border-radius:10px;
+ padding:8px 10px;
+}
+#overlay{
+ display:none;
+ position:fixed;
+ inset:0;
+ background:white;
+ justify-content:center;
+ align-items:center;
+ flex-direction:column;
+ z-index:999;
+ padding:20px;
+ box-sizing:border-box;
+}
+#info{margin-top:20px;text-align:center;max-width:320px}
+#history{
+ display:none;
+}
+.badge{
+ display:inline-block;
+ padding:3px 8px;
+ border-radius:999px;
+ font-size:12px;
+}
+.badge.zaloha{background:#d1fae5;}
+.badge.doplatek{background:#dbeafe;}
+.badge.cela{background:#fef3c7;}
+.badge.jine{background:#e5e7eb;}
+.summary{
+ margin-top:6px;
+ padding:8px;
+ border:1px solid #e5e7eb;
+ border-radius:14px;
+ background:#f8fafc;
+ font-size:14px;
+ line-height:1.45;
+}
+.small{font-size:12px;color:#6b7280}
+
+#rightPanel{
+ position:fixed;
+ top:0;
+ right:-400px;
+ width:400px;
+ height:100%;
+ background:white;
+ box-shadow:-10px 0 30px rgba(0,0,0,0.2);
+ padding:10px;
+ transition:0.2s;
+ z-index:999;
+ overflow:auto;
+ box-sizing:border-box;
+}
+#searchFull{width:100%;margin-bottom:8px;}
+
+@media (max-width: 900px){
+  #rightPanel{width:88vw; right:-88vw;}
+}
+
+@page{
+  size:58mm auto;
+  margin:0;
+}
+@media print{
+ body, html{
+   width:58mm;
+   margin:0 !important;
+   padding:0 !important;
+   background:white !important;
+   -webkit-print-color-adjust: exact;
+   print-color-adjust: exact;
+ }
+ body *{visibility:hidden !important;}
+ #overlay, #overlay *{visibility:visible !important;}
+ #overlay{
+   display:flex !important;
+   position:fixed;
+   inset:0;
+   justify-content:flex-start;
+   align-items:center;
+   padding:4mm 3mm 5mm 3mm !important;
+ }
+ #overlay .action-row{display:none !important;}
+ #qr img{
+   width:34mm !important;
+   height:34mm !important;
+   display:block !important;
+   margin:0 auto !important;
+ }
+ #info{
+   margin-top:3mm !important;
+   max-width:none !important;
+   width:100% !important;
+   font-size:11px !important;
+   line-height:1.25 !important;
+   text-align:center !important;
+ }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+<div class="card">
+
+<div style="text-align:center;margin-bottom:12px;">
+<div style="font-size:42px;">▦</div>
+<div style="font-size:22px;font-weight:bold;">
+QR PLATBY ForVision OPTIKA
+</div>
+</div><div id="syncStatus" style="text-align:center;padding:6px;border-radius:10px;margin-bottom:4px;font-weight:bold;background:#eee">Kontrola...</div>
+<div id="syncDetails" class="small" style="text-align:center;margin-bottom:10px">Lokál: 0 | Server: ?</div>
+
+<div id="accountBanner" style="background:#d1fae5;padding:8px;border-radius:10px;text-align:center;font-weight:bold;margin-bottom:10px">
+✅ Účet OFTABAL s.r.o. (ForVision OPTIKA): 2903487859 / 2010
+</div>
+
+
+<div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-bottom:10px">
+  <input id="vs" placeholder="VS">
+  <button type="button" onclick="newVS()">Nová</button>
+  <button type="button" class="gray" onclick="reuseVS()">Znovu</button>
+</div>
+
+<input id="amount" placeholder="Částka">
+<input id="note" placeholder="Poznámka">
+
+<div class="type-grid">
+  <button type="button" class="type-btn active" onclick="setType('ZÁLOHA', this)">ZÁLOHA</button>
+  <button type="button" class="type-btn" onclick="setType('DOPLATEK', this)">DOPLATEK</button>
+  <button type="button" class="type-btn" onclick="setType('CELÁ ČÁSTKA', this)">CELÁ ČÁSTKA</button>
+  <button type="button" class="type-btn" onclick="setType('JINÉ', this)">JINÉ</button>
+</div>
+
+<div class="action-grid">
+  <button type="button" class="qrbtn" onclick="generateQR()">QR</button>
+  <button type="button" class="qrbtn" onclick="quickDoplatek()">DOPLATEK</button>
+</div>
+
+<div id="summary" class="summary">Zadej VS a částku.</div>
+
+<div class="row">
+<button type="button" class="qrkniha" onclick="qrPokladniKniha()">🧾 QR POKLADNA</button>
+<button type="button" class="green" onclick="exportCSV()">Export</button>
+<button type="button" class="green" onclick="exportZIP()">ZIP PDF</button>
+<button type="button" id="historyBtn" class="dark" onclick="toggleHistory()">Historie</button>
+<button type="button" id="completeBtn" class="dark" onclick="togglePanel()">Complete</button>
+<button type="button" class="dark" onclick="openSetup()">Setup</button>
+<button type="button" class="gray" onclick="exportJSON()">JSON</button>
+<button type="button" class="gray" onclick="importJSON()">Import</button>
+</div>
+
+<input id="search" placeholder="Hledat VS, poznámku, částku nebo typ" oninput="render()">
+
+<div id="count" class="small"></div>
+<div id="history">
+<table id="table"></table>
+</div>
+
+</div>
+</div>
+
+<div id="overlay">
+  <div id="qr"></div>
+  <div id="info"></div>
+  <div class="action-row" style="display:flex;gap:10px;margin-top:20px">
+    <button type="button" class="green" onclick="confirmQR()">ZAPLACENO</button>
+    <button type="button" class="red" onclick="closeQR()">ZRUŠIT</button>
+  </div>
+</div>
+
+<div id="rightPanel">
+  <h3 style="margin:4px 0 10px 0;">Historie</h3>
+  <input id="searchFull" placeholder="Hledat VS / částku / poznámku" oninput="renderFull()">
+  <table id="tableFull"></table>
+</div>
+
+<button id="exitBtn" style="
+position:fixed;
+bottom:15px;
+right:15px;
+font-size:13px;
+padding:8px 14px;
+border-radius:12px;
+background:#ef4444;
+color:white;
+border:none;
+box-shadow:0 4px 10px rgba(0,0,0,0.2);
+z-index:9999;
+">EXIT</button>
+
+<script>
+
+// ===== SINGLE INSTANCE PROTECTION =====
+const INSTANCE_ID = Date.now().toString();
+const LOCK_KEY = "FORVISION_LOCK";
+const LOCK_TIMEOUT = 30000;
+
+(function(){
+
+    const now = Date.now();
+    let lock = null;
+
+    try{
+        lock = JSON.parse(localStorage.getItem(LOCK_KEY));
+    }catch(e){}
+
+    if(
+        lock &&
+        lock.id !== INSTANCE_ID &&
+        (now - lock.time) < LOCK_TIMEOUT
+    ){
+
+        alert(
+"▦ QR PLATBY ForVision OPTIKA jsou již otevřené.\n\n" +
+"NAJDĚTE ZÁLOŽKU ▦ QR PLATBY ForVision OPTIKA\n" +
+"A KLIKNĚTE NA NI.\n\n" +
+"TOTO OKNO MŮŽETE ZAVŘÍT."
+);
+
+        document.body.innerHTML = `
+<div style="font-family:Arial;text-align:center;margin-top:80px;padding:20px;">
+
+<h1>▦ QR PLATBY ForVision OPTIKA</h1>
+
+<h2 style="color:#dc2626">
+OKNO JE JIŽ OTEVŘENÉ
+</h2>
+
+<p style="font-size:22px;font-weight:bold">
+NAJDĚTE ZÁLOŽKU
+<br><br>
+▦ QR PLATBY ForVision OPTIKA
+<br><br>
+A KLIKNĚTE NA NI
+</p>
+
+<p style="font-size:20px">
+TOTO OKNO MŮŽETE ZAVŘÍT
+</p>
+
+</div>
+`;
+
+        throw new Error("FORVISION_LOCK");
+    }
+
+    localStorage.setItem(
+        LOCK_KEY,
+        JSON.stringify({
+            id: INSTANCE_ID,
+            time: now
+        })
+    );
+
+})();
+
+setInterval(function(){
+
+    localStorage.setItem(
+        LOCK_KEY,
+        JSON.stringify({
+            id: INSTANCE_ID,
+            time: Date.now()
+        })
+    );
+
+},5000);
+
+window.addEventListener("beforeunload",function(){
+
+    try{
+
+        const lock =
+            JSON.parse(localStorage.getItem(LOCK_KEY));
+
+        if(lock && lock.id === INSTANCE_ID){
+            localStorage.removeItem(LOCK_KEY);
+        }
+
+    }catch(e){}
+
+});
+
+// ===== END SINGLE INSTANCE PROTECTION =====
+
+let year = new Date().getFullYear();
+
+
+console.log("=== DIAGNOSTIKA ===");
+
+if (typeof supabase === "undefined") {
+    alert("❌ Supabase knihovna není načtena");
+    throw new Error("Supabase undefined");
+}
+
+alert("✅ Supabase knihovna načtena");
+
+try {
+    const testClient = supabase.createClient(
+        "https://evubrhoqferaqupdklbs.supabase.co",
+        "sb_publishable_NRL6EeQcdHrAJ5LWk_5m9g_wohEO4DD"
+    );
+
+    alert("✅ Klient vytvořen");
+
+    testClient
+        .from("forvision_qr")
+        .select("*")
+        .limit(1)
+        .then(({ data, error }) => {
+            if (error) {
+                alert("❌ " + error.message);
+            } else {
+                alert("✅ Supabase OK (" + data.length + ")");
+            }
+        });
+
+} catch (e) {
+    alert("❌ " + e);
+}
+
+
+const client = supabase.createClient(
+  "https://evubrhoqferaqupdklbs.supabase.co",
+  "sb_publishable_NRL6EeQcdHrAJ5LWk_5m9g_wohEO4DD"
+);
+const DEFAULT_IBAN = "CZ5620100000002903487859";
+let iban = localStorage.getItem("iban") || DEFAULT_IBAN;
+let records = [];
+let lastVS = parseInt(localStorage.getItem("lastVS") || "0", 10);
+
+if(lastVS < 1){
+  const max = records.reduce((m, r) => {
+    const n = parseInt((r.vs || "").slice(-3), 10);
+    return (!isNaN(n) && n > m) ? n : m;
+  }, 0);
+  lastVS = max;
+  localStorage.setItem("lastVS", String(lastVS));
+}
+
+let currentRecord = null;
+let currentType = "ZÁLOHA";
+let pendingQr = null;
+
+let panelOpen = false;
+let serverCount = null;
+let lastSyncText = "nikdy";
+let syncing = false;
+
+const OFTABAL_IBAN = "CZ5620100000002903487859";
+
+function updateAccountBanner(){
+ const el=document.getElementById('accountBanner');
+ if(!el) return;
+ if((iban||'').replace(/\s/g,'')===OFTABAL_IBAN){
+   el.style.background='#d1fae5';
+   el.innerHTML='✅ Účet OFTABAL s.r.o. (ForVision OPTIKA): 2903487859 / 2010';
+ }else{
+   el.style.background='#fee2e2';
+   el.innerHTML='⚠️ JINÝ ÚČET!<br>'+iban+'<br>Výchozí účet ForVision OPTIKA (OFTABAL s.r.o.): 2903487859 / 2010';
+ }
+}
+
+
+function updateSyncStatus(){
+  const el=document.getElementById('syncStatus');
+  const details=document.getElementById('syncDetails');
+  if(!el) return;
+  const pending=(records||[]).filter(r=>r.pendingSync || r.deletedPendingSync).length;
+
+  if(details){
+    details.innerHTML = 'Lokál: ' + (records||[]).length +
+      ' | Server: ' + (serverCount === null ? '?' : serverCount) +
+      ' | Poslední sync: ' + lastSyncText;
+  }
+
+  if(!navigator.onLine){
+    el.innerHTML='🔴 OFFLINE – ukládám lokálně';
+    el.style.background='#fee2e2';
+    return;
+  }
+
+  if(syncing){
+    el.innerHTML='🔵 Synchronizuji...';
+    el.style.background='#dbeafe';
+    return;
+  }
+
+  if(pending>0){
+    el.innerHTML='🟡 Čeká na synchronizaci: '+pending;
+    el.style.background='#fef3c7';
+    return;
+  }
+
+  el.innerHTML='🟢 ONLINE + SYNC OK';
+  el.style.background='#d1fae5';
+}
+
+
+
+const vsEl = document.getElementById("vs");
+const amountEl = document.getElementById("amount");
+const noteEl = document.getElementById("note");
+const searchEl = document.getElementById("search");
+const countEl = document.getElementById("count");
+const tableEl = document.getElementById("table");
+const historyEl = document.getElementById("history");
+const historyBtnEl = document.getElementById("historyBtn");
+const overlayEl = document.getElementById("overlay");
+const qrEl = document.getElementById("qr");
+const infoEl = document.getElementById("info");
+const summaryEl = document.getElementById("summary");
+const panelEl = document.getElementById("rightPanel");
+const searchFullEl = document.getElementById("searchFull");
+const tableFullEl = document.getElementById("tableFull");
+const completeBtnEl = document.getElementById("completeBtn");
+
+function save(){
+  localStorage.setItem("lastVS", String(lastVS));
+}
+
+async function saveRecord(record){
+  const { error } = await client
+    .from("forvision_qr")
+    .upsert([{
+      id: record.id,
+      vs: record.vs,
+      amount: record.amount,
+      type: record.type,
+      note: record.note,
+      date: record.date
+    }], { onConflict: 'id' });
+
+  if(error){
+    console.error(error);
+    throw error;
+  }
+}
+
+
+function escHtml(value){
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function formatDateLong(dateValue){
+  const d = new Date(dateValue);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
+}
+
+function parseAmount(value){
+  const n = parseFloat(String(value || "").replace(",", ".").replace(/\s/g, ""));
+  return Number.isFinite(n) ? Math.round(n) : NaN;
+}
+
+function normalizeVsInput(raw){
+  let v = String(raw || "").trim().replace(/\s/g, "");
+  if(!v) return "";
+  if(/^\d{3}$/.test(v)) return String(year) + "0" + v;
+  if(/^\d{8}$/.test(v)) return v;
+  return v;
+}
+
+function displayVs(vs){
+  const s = String(vs || "");
+  if(/^\d{8}$/.test(s) && s.startsWith(String(year))) return s.slice(-3);
+  return s;
+}
+
+function setType(type, button){
+  currentType = type;
+  document.querySelectorAll(".type-btn").forEach(btn => btn.classList.remove("active"));
+  if(button) button.classList.add("active");
+  updateSummary();
+}
+
+function quickDoplatek(){
+  currentType = "DOPLATEK";
+  document.querySelectorAll(".type-btn").forEach(btn => btn.classList.remove("active"));
+  const btn = Array.from(document.querySelectorAll(".type-btn")).find(b => b.innerText === "DOPLATEK");
+  if(btn) btn.classList.add("active");
+  generateQR();
+}
+
+function newVS(){
+  let max = 0;
+  records.forEach(r => {
+    const n = parseInt((r.vs || "0").slice(-3), 10);
+    if(!isNaN(n) && n > max) max = n;
+  });
+  const next = max + 1;
+  lastVS = next;
+  save();
+  vsEl.value = String(next).padStart(3, "0");
+  amountEl.value = "";
+  noteEl.value = "";
+  amountEl.focus();
+  updateSummary();
+}
+
+function reuseVS(){
+  const v = prompt("Zadej existující VS / číslo zakázky:", vsEl.value || "");
+  if(v === null) return;
+  vsEl.value = v.trim();
+  amountEl.focus();
+  updateSummary();
+}
+
+function buildSPD(vs, amount){
+
+  if((iban||'').replace(/\s/g,'')!==OFTABAL_IBAN){
+    if(!confirm('POZOR! QR bude vytvořen na jiný účet než OFTABAL. Pokračovat?')){
+      return '';
+    }
+  }
+
+  return "SPD*1.0*ACC:" + iban + "*AM:" + amount + "*CC:CZK*X-VS:" + vs;
+}
+
+function badgeHTML(type){
+  if(type === "ZÁLOHA") return '<span class="badge zaloha">ZÁLOHA</span>';
+  if(type === "DOPLATEK") return '<span class="badge doplatek">DOPLATEK</span>';
+  if(type === "CELÁ" || type === "CELÁ ČÁSTKA") return '<span class="badge cela">CELÁ</span>';
+  return '<span class="badge jine">JINÉ</span>';
+}
+
+function getPaid(vs){
+  return records
+    .filter(r => String(r.vs) === String(vs))
+    .reduce((s, r) => s + Number(r.amount || 0), 0);
+}
+
+function getCountForVs(vs){
+  return records.filter(r => String(r.vs) === String(vs)).length;
+}
+
+function updateSummary(){
+  const vs = normalizeVsInput(vsEl.value);
+  const amount = parseAmount(amountEl.value);
+  if(!vs){
+    summaryEl.innerHTML = "Zadej VS a částku.";
+    return;
+  }
+  const paid = getPaid(vs);
+  const count = getCountForVs(vs);
+  let text = "<div style='font-size:18px'><b>CELKEM: " + paid + " Kč</b></div><br>";
+  text += "<b>Zakázka:</b> " + escHtml(vs) + "<br>";
+  text += "<b>Platby pod VS:</b> " + count + "<br>";
+  text += "<b>Dosud zaplaceno:</b> " + paid + " Kč";
+  if(Number.isFinite(amount)){
+    text += "<br><b>Tahle platba:</b> " + amount + " Kč";
+    text += "<br><b>Po uložení:</b> " + (paid + amount) + " Kč";
+  }
+  summaryEl.innerHTML = text;
+}
+
+function receiptHTML(r){
+  const totalPaid = getPaid(r.vs);
+  const count = getCountForVs(r.vs);
+  const doklad = "FV-" + r.vs + "-" + String(r.id || "").slice(-4);
+
+  return `
+<div style="text-align:center;font-family:Arial;padding:10px">
+<b>OFTABAL s.r.o.</b><br>ForVision OPTIKA<br>
+Praha 10, Plaňanská 1<br>
+IČO: 29415209<br>
+<br>
+<b>DOKLAD:</b> ${r.vs ? "FV-" + r.vs + "-" + String(r.id || "").slice(-4) : ""}<br>
+<b>VS:</b> ${r.vs}<br>
+<b>Datum:</b> ${formatDateLong(r.date)}<br><br>
+<hr>
+<b>Částka:</b> ${r.amount} Kč<br>
+<b>Typ:</b> ${r.type}<br>
+<b>Forma úhrady:</b> QR platba<br><br>
+<hr>
+<b>Celkem uhrazeno (VS):</b> ${totalPaid} Kč<br>
+<b>Počet plateb:</b> ${count}<br>
+<hr>
+${escHtml(r.note || "")}
+</div>`;
+}
+
+function showRecord(r){
+  currentRecord = r;
+  qrEl.innerHTML = "";
+  new QRCode(qrEl, {
+    text: buildSPD(r.vs, r.amount),
+    width: 180,
+    height: 180
+  });
+  infoEl.innerHTML = receiptHTML(r);
+  overlayEl.style.display = "flex";
+}
+
+function generateQR(){
+  const rawVs = vsEl.value.trim();
+  const amount = parseAmount(amountEl.value);
+
+  if(!iban){
+    alert("Nejprve nastav IBAN v Setup.");
+    return;
+  }
+  if(!rawVs || !Number.isFinite(amount) || amount <= 0){
+    alert("Doplň VS a částku.");
+    return;
+  }
+
+  const vs = normalizeVsInput(rawVs);
+  if(!vs){
+    alert("Neplatný VS.");
+    return;
+  }
+
+  const exists = records.some(r => String(r.vs) === String(vs));
+  if(currentType === "CELÁ ČÁSTKA" && exists){
+    if(!confirm("VS už existuje. Opravdu uložit další platbu pod stejným VS?")) return;
+  }
+
+  const suffix = parseInt(String(vs).slice(-3), 10);
+  if(!isNaN(suffix) && suffix > lastVS){
+    lastVS = suffix;
+    save();
+  }
+
+  pendingQr = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,8),
+    vs,
+    amount: amount,
+    type: currentType,
+    date: new Date().toISOString(),
+    note: noteEl.value || ""
+  };
+
+  showRecord(pendingQr);
+}
+
+function getLatestRecordByVs(vs){
+  const items = records.filter(x => String(x.vs) === String(vs));
+  if(!items.length) return null;
+  return items.slice().sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+}
+
+function openRecord(vs){
+  const r = getLatestRecordByVs(vs);
+  if(!r) return;
+  showRecord(r);
+}
+
+function closeQR(){
+  overlayEl.style.display = "none";
+  currentRecord = null;
+}
+
+function render(){
+  const q = (searchEl.value || "").toLowerCase().trim();
+
+  const filtered = records.filter(r => {
+    const type = (r.type || "").toLowerCase();
+    const note = (r.note || "").toLowerCase();
+    const vs = (r.vs || "").toLowerCase();
+    const amount = String(r.amount || "").toLowerCase();
+    const date = formatDateLong(r.date).toLowerCase();
+    const paid = String(getPaid(r.vs));
+    return vs.includes(q) || note.includes(q) || amount.includes(q) || type.includes(q) || date.includes(q) || paid.includes(q);
+  });
+
+  const list = filtered.slice(-2).reverse();
+  countEl.innerText = "Zobrazeno " + list.length + " / " + records.length;
+
+  let html = "<tr><th>VS</th><th>Částka</th><th>Typ</th><th>Součet VS</th><th>Poznámka</th><th>Datum</th><th>PDF</th><th></th></tr>";
+  list.forEach(r => {
+    const safeVs = String(r.vs).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const safeId = String(r.id || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    html += `<tr onclick="openRecord('${safeVs}')">
+      <td>${escHtml(r.vs)}</td>
+      <td>${escHtml(r.amount)}</td>
+      <td>${badgeHTML(r.type || "JINÉ")}</td>
+      <td>${escHtml(getPaid(r.vs))}</td>
+      <td>${escHtml(r.note || "")}</td>
+      <td>${escHtml(formatDateLong(r.date))}</td>
+      <td><button type="button" class="printbtn" onclick="exportOne('${safeId}', event)">PDF</button></td>
+      <td><button type="button" class="delbtn" onclick="deleteRecord('${safeId}', event)">✕</button></td>
+    </tr>`;
+  });
+
+  tableEl.innerHTML = html;
+  if(panelOpen) renderFull();
+}
+
+function renderFull(){
+  if(!tableFullEl) return;
+
+  const q = (searchFullEl?.value || "").toLowerCase().trim();
+  let html = "<tr><th>VS</th><th>Částka</th><th></th></tr>";
+
+  for(let i = records.length - 1; i >= 0; i--){
+    const r = records[i];
+    if(!r) continue;
+
+    const text = (
+      String(r.vs || "") + " " +
+      String(r.amount || "") + " " +
+      String(r.note || "") + " " +
+      String(r.type || "")
+    ).toLowerCase();
+
+    if(q && !text.includes(q)) continue;
+
+    const safeId = String(r.id || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+
+    html += "<tr>" +
+      "<td>" + escHtml(r.vs) + "</td>" +
+      "<td>" + escHtml(r.amount) + "</td>" +
+      "<td>" +
+        "<button type=\"button\" onclick=\"exportOne('" + safeId + "', event)\">PDF</button> " +
+        "<button type=\"button\" onclick=\"deleteRecord('" + safeId + "', event)\">✕</button>" +
+      "</td>" +
+    "</tr>";
+  }
+
+  tableFullEl.innerHTML = html;
+}
+
+async function deleteRecord(id, e){
+  if(e) e.stopPropagation();
+  if(!confirm("Opravdu smazat záznam?")) return;
+
+  const idx = records.findIndex(r => String(r.id) === String(id));
+  if(idx < 0) return;
+
+  // Primárně mažeme ze Supabase. Když není internet, označíme lokální smazání k pozdější synchronizaci.
+  if(navigator.onLine){
+    try{
+      const { error } = await client.from("forvision_qr").delete().eq("id", id);
+      if(error) throw error;
+      records.splice(idx, 1);
+    }catch(err){
+      records[idx].deletedPendingSync = true;
+      records[idx].pendingSync = false;
+    }
+  }else{
+    records[idx].deletedPendingSync = true;
+    records[idx].pendingSync = false;
+  }
+
+  saveLocalRecords();
+  render();
+  updateSummary();
+  updateSyncStatus();
+}
+
+
+function exportOne(id, e){
+  if(e) e.stopPropagation();
+
+  const r = records.find(x => String(x.id) === String(id));
+  if(!r) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.style.width = "300px";
+  wrapper.style.padding = "20px";
+  wrapper.style.fontFamily = "Arial";
+  wrapper.style.textAlign = "center";
+  wrapper.innerHTML = receiptHTML(r);
+
+  html2pdf().set({
+    margin: 10,
+    filename: `FV-${r.vs}-${r.id}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+  }).from(wrapper).save();
+}
+
+function exportCSV(){
+  let csv = "ID;VS;částka;typ;celkem_pod_VS;datum;poznámka\n";
+  records.forEach(r => {
+    csv += `${r.id || ""};${r.vs};${r.amount};${r.type || ""};${getPaid(r.vs)};${formatDateLong(r.date)};${String(r.note || "").replace(/\n/g, " ")}\n`;
+  });
+  const blob = new Blob(["\uFEFF" + csv], {type: "text/csv;charset=utf-8;"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "forvision.csv";
+  a.click();
+}
+
+async function exportZIP(){
+  const zip = new JSZip();
+
+  for(const r of records){
+    const wrapper = document.createElement("div");
+    wrapper.style.width = "300px";
+    wrapper.style.padding = "20px";
+    wrapper.style.fontFamily = "Arial";
+    wrapper.style.textAlign = "center";
+    wrapper.innerHTML = receiptHTML(r);
+
+    try{
+      const pdfBlob = await html2pdf().set({
+        margin: 10,
+        filename: `FV-${r.vs}-${r.id}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+      }).from(wrapper).outputPdf("blob");
+
+      zip.file(`FV-${r.vs}-${r.id}.pdf`, pdfBlob);
+    } catch(e){
+      console.error("PDF chyba:", e);
+    }
+  }
+
+  const content = await zip.generateAsync({type:"blob"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(content);
+  a.download = "doklady.zip";
+  a.click();
+}
+
+function toggleHistory(){
+  if(historyEl.style.display === "none" || historyEl.style.display === ""){
+    historyEl.style.display = "block";
+    historyBtnEl.innerText = "Skrýt";
+  } else {
+    historyEl.style.display = "none";
+    historyBtnEl.innerText = "Historie";
+  }
+}
+
+function togglePanel(){
+  if(!panelEl) return;
+
+  const closedRight = window.innerWidth <= 900 ? "-88vw" : "-400px";
+
+  if(!panelOpen){
+    panelEl.style.right = "0";
+    setTimeout(() => {
+      renderFull();
+      if(searchFullEl) searchFullEl.focus();
+    }, 50);
+  } else {
+    panelEl.style.right = closedRight;
+  }
+
+  panelOpen = !panelOpen;
+}
+
+function openSetup(){
+  const pin = prompt("PIN:");
+  if(pin !== "1815"){
+    alert("Špatný PIN");
+    return;
+  }
+  const i = prompt("IBAN:", iban);
+  if(i !== null && i !== ""){
+    const novy=i.replace(/\s/g,'');
+    if(!confirm('Měníte účet pro QR platby.\n\nStarý: '+iban+'\n\nNový: '+novy+'\n\nPokračovat?')) return;
+    iban = novy;
+    localStorage.setItem("iban", iban);
+    updateAccountBanner();
+  }
+}
+
+async function confirmQR(){
+  if(!pendingQr) return;
+
+  pendingQr.pendingSync = true;
+  records.push(pendingQr);
+  saveLocalRecords();
+
+  try{
+    if(navigator.onLine){
+      await saveRecord(pendingQr);
+      pendingQr.pendingSync = false;
+      saveLocalRecords();
+    }
+  }catch(e){
+    pendingQr.pendingSync = true;
+    saveLocalRecords();
+  }
+
+  pendingQr = null;
+  overlayEl.style.display = "none";
+  qrEl.innerHTML = "";
+
+  amountEl.value = "";
+  noteEl.value = "";
+
+  newVS();
+  render();
+  updateSyncStatus();
+}
+
+function editRecord(id){
+  const r = records.find(x => String(x.id) === String(id));
+  if(!r) return;
+
+  vsEl.value = displayVs(r.vs);
+  amountEl.value = r.amount;
+  noteEl.value = r.note || "";
+
+  currentType = r.type;
+  document.querySelectorAll(".type-btn").forEach(btn=>{
+    btn.classList.remove("active");
+    if(btn.innerText === r.type) btn.classList.add("active");
+  });
+
+  pendingQr = null;
+  try{ closeQR(); }catch(e){}
+
+  records = records.filter(x => String(x.id) !== String(id));
+  save();
+  render();
+  updateSummary();
+}
+
+// close panel on click outside
+document.addEventListener("click", function(e){
+  if(!panelOpen) return;
+  if(!panelEl) return;
+
+  const insidePanel = panelEl.contains(e.target);
+  const onBtn = completeBtnEl && completeBtnEl.contains(e.target);
+  if(!insidePanel && !onBtn){
+    const closedRight = window.innerWidth <= 900 ? "-88vw" : "-400px";
+    panelEl.style.right = closedRight;
+    panelOpen = false;
+  }
+});
+
+// ESC closes panel
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape" && panelOpen && panelEl){
+    const closedRight = window.innerWidth <= 900 ? "-88vw" : "-400px";
+    panelEl.style.right = closedRight;
+    panelOpen = false;
+  }
+});
+
+let pressTimer;
+const exitBtn = document.getElementById("exitBtn");
+
+exitBtn.addEventListener("mousedown", function(){
+  pressTimer = setTimeout(function(){
+    const pin = prompt("Zadej PIN pro ukončení:");
+    if(pin === "1234"){
+      window.close();
+      setTimeout(()=>alert("Pokud se nezavře: ALT+F4"),200);
+    } else if(pin !== null){
+      alert("Špatný PIN");
+    }
+  }, 1500);
+});
+
+exitBtn.addEventListener("mouseup", function(){ clearTimeout(pressTimer); });
+exitBtn.addEventListener("mouseleave", function(){ clearTimeout(pressTimer); });
+
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("keydown", function(e){
+  if(e.key === "F5") e.preventDefault();
+  if(e.ctrlKey && (e.key === "r" || e.key === "R")) e.preventDefault();
+});
+
+vsEl.addEventListener("input", updateSummary);
+amountEl.addEventListener("input", updateSummary);
+
+
+function saveLocalRecords(){
+  localStorage.setItem("forvision_records", JSON.stringify(records));
+}
+
+function loadLocalRecords(){
+  try{
+    const data = JSON.parse(localStorage.getItem("forvision_records") || "[]");
+    if(Array.isArray(data)) records = data;
+  }catch(e){ records = []; }
+}
+
+function mergeRecords(localList, serverList){
+  const map = new Map();
+
+  // Server je hlavní databáze.
+  (serverList || []).forEach(r => {
+    if(!r || !r.id) return;
+    map.set(String(r.id), {...r, pendingSync:false, deletedPendingSync:false});
+  });
+
+  // Lokální záznamy přidáme jen pokud čekají na sync nebo na serveru ještě nejsou.
+  (localList || []).forEach(r => {
+    if(!r || !r.id) return;
+    const id = String(r.id);
+    if(r.deletedPendingSync){
+      map.set(id, {...r});
+      return;
+    }
+    if(r.pendingSync || !map.has(id)){
+      map.set(id, {...r});
+    }
+  });
+
+  return Array.from(map.values()).sort((a,b)=>new Date(a.date||0)-new Date(b.date||0));
+}
+
+async function syncPendingToSupabase(){
+  if(syncing) return;
+  if(!navigator.onLine){ updateSyncStatus(); return; }
+  syncing = true;
+  updateSyncStatus();
+
+  try{
+    // 1) nejdřív odešleme lokální nové záznamy
+    for(const r of records.filter(r => r.pendingSync && !r.deletedPendingSync)){
+      await saveRecord(r);
+      r.pendingSync = false;
+    }
+
+    // 2) potom smazání, která vznikla offline
+    for(const r of records.filter(r => r.deletedPendingSync)){
+      try{
+        await client.from("forvision_qr").delete().eq("id", r.id);
+        r._removeLocal = true;
+      }catch(e){
+        console.error(e);
+      }
+    }
+    records = records.filter(r => !r._removeLocal);
+
+    // 3) načteme server a bezpečně sloučíme s lokální frontou
+    const { data, error } = await client.from("forvision_qr").select("*").order("date");
+    if(error) throw error;
+
+    serverCount = (data || []).length;
+    records = mergeRecords(records, data || []);
+    lastSyncText = formatDateLong(new Date().toISOString());
+    saveLocalRecords();
+    render();
+    updateSummary();
+  }catch(e){
+    console.error("SYNC chyba:", e);
+  }finally{
+    syncing = false;
+    updateSyncStatus();
+  }
+}
+
+async function loadSupabase(){
+  await syncPendingToSupabase();
+
+  let max = 0;
+
+  records.forEach(r=>{
+    const n = parseInt((r.vs || "").slice(-3),10);
+    if(!isNaN(n) && n > max) max = n;
+  });
+
+  lastVS = max;
+  localStorage.setItem("lastVS", String(lastVS));
+
+  vsEl.value = String(max + 1).padStart(3,"0");
+
+  updateSummary();
+}
+
+function exportJSON(){
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    localCount: records.length,
+    serverCount: serverCount,
+    records: records
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "forvision-zaloha-" + new Date().toISOString().slice(0,10) + ".json";
+  a.click();
+}
+
+function importJSON(){
+  const pin = prompt("PIN pro import:");
+  if(pin !== "1815") { alert("Špatný PIN"); return; }
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json,application/json";
+  input.onchange = async function(){
+    const file = input.files && input.files[0];
+    if(!file) return;
+    const text = await file.text();
+    try{
+      const parsed = JSON.parse(text);
+      const imported = Array.isArray(parsed) ? parsed : parsed.records;
+      if(!Array.isArray(imported)) throw new Error("Soubor neobsahuje records");
+      records = mergeRecords(records, imported.map(r=>({...r, pendingSync:true})));
+      saveLocalRecords();
+      render();
+      updateSummary();
+      updateSyncStatus();
+      await syncPendingToSupabase();
+      alert("Import hotový.");
+    }catch(e){
+      alert("Import se nepovedl: " + e.message);
+    }
+  };
+  input.click();
+}
+
+
+function qrPokladniKniha(){
+
+  let d = new Date();
+  let mesic = d.getMonth()+1;
+  let rok = d.getFullYear();
+
+  if(!confirm("Zobrazit aktuální měsíc?")){
+      mesic = prompt("Měsíc (1-12):", mesic);
+      rok = prompt("Rok:", rok);
+
+      if(!mesic || !rok) return;
+  }
+
+  const seznam = records.filter(r=>{
+      const dt = new Date(r.date);
+      return ((dt.getMonth()+1 == mesic) && (dt.getFullYear() == rok));
+  });
+
+  let celkem = 0;
+
+  let html = `
+  <h2>QR POKLADNÍ KNIHA – ForVision OPTIKA ${String(mesic).padStart(2,'0')}/${rok}</h2>
+  <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%">
+  <tr>
+    <th>Datum</th>
+    <th>VS</th>
+    <th>Poznámka</th>
+    <th>Typ</th>
+    <th>Kč</th>
+  </tr>
+  `;
+
+  seznam.forEach(r=>{
+      celkem += Number(r.amount||0);
+      html += `
+      <tr>
+        <td>${formatDateLong(r.date)}</td>
+        <td>${r.vs}</td>
+        <td>${escHtml(r.note||'')}</td>
+        <td>${r.type}</td>
+        <td>${r.amount}</td>
+      </tr>`;
+  });
+
+  html += `
+  </table>
+  <br><br>
+  <b>Počet plateb:</b> ${seznam.length}<br>
+  <b>Celkem QR:</b> ${celkem.toLocaleString('cs-CZ')} Kč<br>
+  <b>Provize 3 %:</b> ${(celkem*0.03).toLocaleString('cs-CZ',{minimumFractionDigits:2,maximumFractionDigits:2})} Kč`;
+
+  const w = window.open('', '_blank');
+  const generated = new Date().toLocaleString('cs-CZ');
+
+  w.document.write(`<html><head><title>QR Pokladní kniha</title>
+<style>
+@media print{
+  .no-print{display:none !important;}
+  body{margin:15mm !important;}
+}
+</style>
+</head><body style="font-family:Arial;padding:20px">
+  <div class="no-print" style="margin-bottom:20px">
+    <button onclick="window.print()" style="padding:10px 20px;font-size:16px">🖨️ TISK</button>
+    <button onclick="window.close()" style="padding:10px 20px;font-size:16px">❌ ZAVŘÍT</button>
+  </div>
+  ${html}
+  <hr>
+  <b>Vygenerováno:</b> ${generated}
+  </body></html>`);
+  w.document.close();
+}
+
+
+loadLocalRecords();
+render();
+updateSummary();
+updateSyncStatus();
+updateAccountBanner();
+loadSupabase();
+setInterval(()=>{syncPendingToSupabase();},30000);
+window.addEventListener('online',()=>{updateSyncStatus();syncPendingToSupabase();});
+window.addEventListener('offline',updateSyncStatus);
+
+</script>
+
+</body>
+</html>
