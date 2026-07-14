@@ -1,0 +1,17 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          curl --silent --show-error --fail \
+          "https://evubrhoqferaqupdklbs.supabase.co/rest/v1/forvision_qr?select=id&limit=1" \
+          -H "apikey: sb_publishable_NRL6EeQcdHrAJ5LWk_5m9g_wohEO4DD"
