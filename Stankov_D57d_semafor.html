@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220" id="themeColor">
+<title>Staňkov – D57d semafor</title>
+<style>
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#0b1220;color:#fff;display:flex;justify-content:center;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+main{width:min(620px,100%);padding:24px 0 32px;text-align:center}
+.eyebrow{font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;font-weight:700}
+h1{font-size:28px;margin:8px 0 22px}
+.light{width:min(56vw,260px);aspect-ratio:1;border-radius:50%;margin:0 auto 24px;background:#64748b;box-shadow:0 0 32px #64748b88,inset 0 -15px 35px #0005;border:8px solid #ffffff20;transition:.25s}
+.light.nt{background:#22c55e;box-shadow:0 0 42px #22c55ecc,0 0 100px #22c55e55,inset 0 -15px 35px #0004}
+.light.vt{background:#ef4444;box-shadow:0 0 42px #ef4444cc,0 0 100px #ef444455,inset 0 -15px 35px #0004}
+.status{font-size:clamp(38px,11vw,64px);font-weight:900;line-height:1;margin-bottom:10px}
+.tariff{font-size:21px;color:#cbd5e1;margin-bottom:22px}
+.card{background:#111c30;border:1px solid #ffffff18;border-radius:20px;padding:18px;margin:14px 0;text-align:left}
+.row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid #ffffff12}.row:last-child{border:0}
+.label{color:#94a3b8}.value{font-weight:700;text-align:right}
+.next{font-size:24px;font-weight:800}
+.schedule{margin-top:22px;text-align:left}.schedule h2{font-size:18px;margin:0 0 10px}.schedule p{margin:6px 0;color:#cbd5e1;font-size:15px}
+small{display:block;color:#64748b;margin-top:24px;line-height:1.45}
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Staňkov · HDO a1b6dp01 · D57d</div>
+  <h1>Je vhodné nabíjet auto?</h1>
+  <div id="light" class="light"></div>
+  <div id="status" class="status">ZJIŠŤUJI…</div>
+  <div id="tariff" class="tariff"></div>
+  <div class="card">
+    <div class="row"><span class="label">Teď</span><span id="now" class="value"></span></div>
+    <div class="row"><span class="label">Další změna</span><span id="next" class="value next"></span></div>
+    <div class="row"><span class="label">Za</span><span id="countdown" class="value"></span></div>
+  </div>
+  <div class="card schedule">
+    <h2>Dnešní nízký tarif</h2>
+    <p id="todaySchedule"></p>
+  </div>
+  <small>Časy jsou převzaty z tabulky ČEZ pro povel a1b6dp01. Stránka ukazuje plán HDO; skutečný přijímač může být výjimečně sepnut s malou odchylkou.</small>
+</main>
+<script>
+const weekdayNT = [[0,51],[110,331],[390,511],[570,751],[810,1440]];
+const weekendNT = [[0,30],[90,586],[645,901],[959,1316],[1375,1440]];
+const dayNames=['neděle','pondělí','úterý','středa','čtvrtek','pátek','sobota'];
+const pad=n=>String(n).padStart(2,'0');
+const fmtMin=m=>`${pad(Math.floor(m/60)%24)}:${pad(m%60)}`;
+const intervalsFor=d => (d===0||d===6)?weekendNT:weekdayNT;
+function getState(now){
+  const day=now.getDay(), mins=now.getHours()*60+now.getMinutes()+now.getSeconds()/60;
+  const arr=intervalsFor(day);
+  const active=arr.some(([s,e])=>mins>=s&&mins<e);
+  let nextMinute=null, nextActive=!active, addDays=0;
+  for(const [s,e] of arr){
+    const boundary=active?e:s;
+    if(boundary>mins && ((active && mins>=s&&mins<e)||(!active && s>mins))){nextMinute=boundary;break;}
+  }
+  if(nextMinute===null){
+    addDays=1;
+    const tomorrow=(day+1)%7, nextArr=intervalsFor(tomorrow);
+    nextMinute=nextArr[0][0]; nextActive=true;
+  }
+  const target=new Date(now); target.setDate(target.getDate()+addDays); target.setHours(Math.floor(nextMinute/60)%24,nextMinute%60,0,0);
+  if(nextMinute===1440){target.setDate(target.getDate()+1);target.setHours(0,0,0,0)}
+  return {active,target,nextActive,arr};
+}
+function update(){
+  const now=new Date(), s=getState(now);
+  document.getElementById('now').textContent=`${dayNames[now.getDay()]} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  const light=document.getElementById('light'), status=document.getElementById('status'), tariff=document.getElementById('tariff');
+  light.className='light '+(s.active?'nt':'vt');
+  status.textContent=s.active?'NABÍJET':'NENABÍJET';
+  tariff.textContent=s.active?'Nízký tarif (NT) je právě aktivní':'Vysoký tarif (VT) je právě aktivní';
+  document.getElementById('themeColor').content=s.active?'#12351f':'#3b1518';
+  document.getElementById('next').textContent=`${s.nextActive?'NT':'VT'} v ${pad(s.target.getHours())}:${pad(s.target.getMinutes())}`;
+  let sec=Math.max(0,Math.floor((s.target-now)/1000));
+  const h=Math.floor(sec/3600);sec%=3600;const m=Math.floor(sec/60);const ss=sec%60;
+  document.getElementById('countdown').textContent=`${h? h+' h ':''}${pad(m)} min ${pad(ss)} s`;
+  document.getElementById('todaySchedule').textContent=s.arr.map(([a,b])=>`${fmtMin(a)}–${b===1440?'24:00':fmtMin(b)}`).join('  ·  ');
+}
+update();setInterval(update,1000);
+</script>
+</body>
+</html>
