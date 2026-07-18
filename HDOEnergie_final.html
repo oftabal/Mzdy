@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b1220">
+<title>HDO Energie</title>
+<style>
+:root{--bg:#07101f;--panel:#101b2f;--panel2:#16243d;--text:#eef4ff;--muted:#94a3b8;--green:#2dd4bf;--yellow:#fbbf24;--red:#fb7185;--blue:#60a5fa;--line:#263652}
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#07101f,#0d1728 45%,#08111f);color:var(--text);font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+.wrap{max-width:1050px;margin:auto;padding:calc(16px + env(safe-area-inset-top)) 14px 40px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+h1{font-size:27px;margin:0 0 4px}.sub{color:var(--muted);font-size:13px}
+.badge{border:1px solid var(--line);background:#0c1729;padding:7px 10px;border-radius:999px;color:var(--muted);font-size:12px}
+.hero{background:linear-gradient(135deg,#123354,#11263d);border:1px solid #284361;border-radius:20px;padding:18px;margin:12px 0 16px;box-shadow:0 12px 35px #0005}
+.hero strong{font-size:22px}.hero .tip{color:#cde8ff;margin-top:6px;line-height:1.45}
+.tabs{display:flex;gap:8px;overflow:auto;padding-bottom:4px;margin-bottom:14px}
+.tabs button{white-space:nowrap;border:1px solid var(--line);background:#0d182a;color:var(--muted);padding:9px 13px;border-radius:999px;font-weight:650}
+.tabs button.active{background:#e7f0ff;color:#10203b;border-color:#e7f0ff}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{background:rgba(16,27,47,.93);border:1px solid var(--line);border-radius:18px;padding:15px;box-shadow:0 8px 24px #0003}
+.card.best{border-color:#2dd4bf;box-shadow:0 0 0 1px #2dd4bf55,0 8px 24px #0003}
+.card h2{font-size:19px;margin:0 0 4px}.addr{color:var(--muted);font-size:12px;min-height:30px}
+.row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #22314b}.row:last-child{border-bottom:0}.label{color:var(--muted)}.value{font-weight:700;text-align:right}
+.pricebox{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.price{background:#0b1526;border-radius:14px;padding:11px;text-align:center}.price b{display:block;font-size:23px}.price span{color:var(--muted);font-size:12px}
+.fix{margin-top:11px;padding:10px;border-radius:12px;background:#0b1526}.fixline{display:flex;justify-content:space-between;align-items:center}.bar{height:7px;border-radius:99px;background:#263652;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;border-radius:99px}
+.section{display:none}.section.active{display:block}.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:15px}
+.controls{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:10px;margin-bottom:14px}select,input{width:100%;background:#0b1526;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:16px}
+.resultTable{width:100%;border-collapse:collapse}.resultTable th,.resultTable td{padding:11px 8px;border-bottom:1px solid var(--line);text-align:right}.resultTable th:first-child,.resultTable td:first-child{text-align:left}.star{color:var(--green);font-weight:800}
+.notice{padding:12px;border-radius:14px;background:#0b1526;color:#cbd5e1;line-height:1.45}
+.small{font-size:12px;color:var(--muted)}.footer{margin-top:16px;color:var(--muted);font-size:12px;text-align:center}
+button.action{border:0;background:#e7f0ff;color:#10203b;border-radius:12px;padding:11px 14px;font-weight:750}
+textarea{width:100%;min-height:230px;background:#07101f;color:#dbeafe;border:1px solid var(--line);border-radius:12px;padding:12px;font-family:ui-monospace,monospace;font-size:12px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.controls{grid-template-columns:1fr}.wrap{padding-left:11px;padding-right:11px}.card{padding:14px}.hero{padding:15px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>⚡ HDO Energie</h1><div class="sub">Ceny, fixace a nabíjení podle odběrného místa</div></div>
+  <div class="badge" id="updated"></div>
+</header>
+
+<div class="hero">
+  <strong id="recommendation">Načítám doporučení…</strong>
+  <div class="tip" id="recommendationText"></div>
+</div>
+
+<nav class="tabs">
+  <button class="active" data-tab="places">Odběrná místa</button>
+  <button data-tab="charging">Nabíjení aut</button>
+  <button data-tab="fixes">Fixace</button>
+  <button data-tab="hdo">HDO</button>
+  <button data-tab="data">Data</button>
+</nav>
+
+<section id="places" class="section active"><div id="placesGrid" class="grid"></div></section>
+
+<section id="charging" class="section">
+<div class="panel">
+  <div class="controls">
+    <select id="vehicle"></select>
+    <select id="chargeRange">
+      <option value="100">0 → 100 %</option><option value="80">20 → 100 %</option>
+      <option value="60">20 → 80 %</option><option value="50">30 → 80 %</option>
+      <option value="30">50 → 80 %</option>
+    </select>
+    <select id="tariffMode"><option value="nt">Nízký tarif</option><option value="vt">Vysoký tarif</option></select>
+  </div>
+  <table class="resultTable"><thead><tr><th>Místo</th><th>Cena nabití</th><th>Cena / 100 km</th></tr></thead><tbody id="chargingRows"></tbody></table>
+  <p class="small">Výpočet používá cenu z posledního vyúčtování. Nezahrnuje stálý měsíční poplatek ani ztráty nabíjením.</p>
+</div>
+</section>
+
+<section id="fixes" class="section"><div id="fixList" class="grid"></div></section>
+
+<section id="hdo" class="section">
+<div class="panel">
+  <h2 style="margin-top:0">HDO / nízký tarif</h2>
+  <div class="notice">Aplikace je připravená na časy HDO v poli <b>hdo</b> v souboru <b>energie.json</b>. V dodaných fakturách přesné časy HDO nejsou, proto je zatím nevymýšlím. Po doplnění časů se zde automaticky ukáže „NT právě běží“, další změna a odpočet.</div>
+</div>
+</section>
+
+<section id="data" class="section">
+<div class="panel">
+  <h2 style="margin-top:0">Aktualizace po novém vyúčtování</h2>
+  <p>Na GitHub pak stačí přepsat pouze <b>energie.json</b>. HTML se nemění.</p>
+  <textarea id="jsonPreview" readonly></textarea>
+  <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+    <button class="action" onclick="downloadJSON()">Stáhnout energie.json</button>
+    <button class="action" onclick="copyJSON()">Kopírovat JSON</button>
+  </div>
+</div>
+</section>
+
+<div class="footer">HDO Energie v1.0 • ceny s DPH dle posledních vyúčtování</div>
+</div>
+
+<script>
+const FALLBACK = {"meta": {"version": "1.0", "updated": "2026-07-18", "note": "Ceny jsou průměrné ceny za kWh z posledního vyúčtování včetně DPH, bez stálých plateb."}, "places": [{"id": "stankov", "name": "Staňkov", "icon": "🏡", "address": "Trnkova 305, 345 61 Staňkov", "ean": "859182400890879927", "tariff": "D45d", "breaker": "3×35 A", "product": "Elektřina Fix na 3 roky", "vt": 5.15, "nt": 4.37, "fixEnd": "2027-12-20", "billingPeriod": "4. 3. 2025 – 22. 3. 2026", "advance": 2400, "hdo": []}, {"id": "sumava", "name": "Železná Ruda", "icon": "🏔️", "address": "K vodárně 407/27, 340 04 Železná Ruda", "ean": "859182400801332169", "tariff": "D57d", "breaker": "3×25 A", "product": "Elektřina Bez starostí na 3 roky", "vt": 4.51, "nt": 3.82, "fixEnd": "2027-10-03", "billingPeriod": "24. 4. 2025 – 31. 3. 2026", "advance": 4300, "hdo": []}, {"id": "cheb", "name": "Cheb", "icon": "🏠", "address": "Pod Rozhlednou 2594/8, 350 02 Cheb", "ean": "859182400894975663", "tariff": "D02d", "breaker": "3×25 A", "product": "Elektřina Bez starostí na 3 roky", "vt": 6.74, "nt": null, "fixEnd": "2028-02-18", "billingPeriod": "25. 4. 2025 – 21. 4. 2026", "advance": 3870, "hdo": []}], "vehicles": [{"id": "xc90", "name": "Volvo XC90 T8", "battery": 18.8, "consumption": 22.0}, {"id": "eqs", "name": "Mercedes EQS SUV", "battery": 118.0, "consumption": 24.0}, {"id": "ford", "name": "Ford PHEV", "battery": 14.4, "consumption": 20.0}]};
+let DATA = FALLBACK;
+
+const fmt = n => new Intl.NumberFormat('cs-CZ',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+const dateCS = iso => new Date(iso+'T12:00:00').toLocaleDateString('cs-CZ');
+const daysLeft = iso => Math.ceil((new Date(iso+'T23:59:59')-new Date())/86400000);
+
+async function load(){
+  try{
+    const r=await fetch('energie.json?'+Date.now(),{cache:'no-store'});
+    if(r.ok) DATA=await r.json();
+  }catch(e){}
+  render();
+}
+function fixColor(days){return days<60?'var(--red)':days<180?'var(--yellow)':'var(--green)'}
+function render(){
+  document.getElementById('updated').textContent='Aktualizace '+new Date(DATA.meta.updated).toLocaleDateString('cs-CZ');
+  const usable=DATA.places.filter(p=>p.nt!==null);
+  const best=usable.reduce((a,b)=>a.nt<b.nt?a:b);
+  document.getElementById('recommendation').textContent='⭐ Nejlevnější je '+best.name;
+  document.getElementById('recommendationText').textContent='Nízký tarif '+fmt(best.nt)+' Kč/kWh. Oproti Staňkovu je levnější o '+fmt(DATA.places.find(p=>p.id==='stankov').nt-best.nt)+' Kč/kWh.';
+  document.getElementById('placesGrid').innerHTML=DATA.places.map(p=>{
+    const d=daysLeft(p.fixEnd), pct=Math.max(0,Math.min(100,d/730*100));
+    return `<article class="card ${p.id===best.id?'best':''}">
+      <h2>${p.icon} ${p.name} ${p.id===best.id?'<span class="star">★</span>':''}</h2>
+      <div class="addr">${p.address}</div>
+      <div class="pricebox"><div class="price"><b>${fmt(p.vt)}</b><span>VT Kč/kWh</span></div>
+      <div class="price"><b>${p.nt===null?'—':fmt(p.nt)}</b><span>NT Kč/kWh</span></div></div>
+      <div class="row"><span class="label">Sazba</span><span class="value">${p.tariff}</span></div>
+      <div class="row"><span class="label">Jistič</span><span class="value">${p.breaker}</span></div>
+      <div class="row"><span class="label">Produkt</span><span class="value">${p.product}</span></div>
+      <div class="row"><span class="label">Záloha</span><span class="value">${p.advance.toLocaleString('cs-CZ')} Kč</span></div>
+      <div class="fix"><div class="fixline"><span>Fix do ${dateCS(p.fixEnd)}</span><b style="color:${fixColor(d)}">${d} dní</b></div>
+      <div class="bar"><i style="width:${pct}%;background:${fixColor(d)}"></i></div></div>
+    </article>`}).join('');
+  document.getElementById('vehicle').innerHTML=DATA.vehicles.map(v=>`<option value="${v.id}">${v.name} • ${v.battery} kWh</option>`).join('');
+  renderCharging(); renderFixes();
+  document.getElementById('jsonPreview').value=JSON.stringify(DATA,null,2);
+}
+function renderCharging(){
+  const v=DATA.vehicles.find(x=>x.id===document.getElementById('vehicle').value)||DATA.vehicles[0];
+  const part=Number(document.getElementById('chargeRange').value)/100;
+  const mode=document.getElementById('tariffMode').value;
+  let rows=DATA.places.map(p=>{
+    const price=mode==='nt'?p.nt:p.vt;
+    if(price===null)return {...p,cost:null,c100:null};
+    return {...p,cost:v.battery*part*price,c100:v.consumption*price};
+  });
+  const vals=rows.filter(x=>x.cost!==null); const min=Math.min(...vals.map(x=>x.cost));
+  document.getElementById('chargingRows').innerHTML=rows.map(r=>`<tr><td>${r.icon} ${r.name}</td><td class="${r.cost===min?'star':''}">${r.cost===null?'—':fmt(r.cost)+' Kč'} ${r.cost===min?'★':''}</td><td>${r.c100===null?'—':fmt(r.c100)+' Kč'}</td></tr>`).join('');
+}
+function renderFixes(){
+  document.getElementById('fixList').innerHTML=DATA.places.slice().sort((a,b)=>new Date(a.fixEnd)-new Date(b.fixEnd)).map(p=>{
+    const d=daysLeft(p.fixEnd);
+    return `<article class="card"><h2>${p.icon} ${p.name}</h2><div class="row"><span class="label">Konec fixace</span><span class="value">${dateCS(p.fixEnd)}</span></div><div class="row"><span class="label">Zbývá</span><span class="value" style="color:${fixColor(d)}">${d} dní</span></div><div class="row"><span class="label">Produkt</span><span class="value">${p.product}</span></div></article>`
+  }).join('');
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')});
+['vehicle','chargeRange','tariffMode'].forEach(id=>document.getElementById(id).addEventListener('change',renderCharging));
+function downloadJSON(){const b=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='energie.json';a.click();URL.revokeObjectURL(a.href)}
+async function copyJSON(){await navigator.clipboard.writeText(JSON.stringify(DATA,null,2));alert('JSON zkopírován.')}
+load();
+</script>
+</body></html>
