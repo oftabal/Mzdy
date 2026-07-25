@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<title>Aktuální cena benzínu</title>
+<style>
+:root{--bg:#07111f;--card:#101d30;--line:#243650;--text:#f7fbff;--muted:#91a2bb;--green:#34d17d;--red:#ff6476}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(180deg,#07111f,#0a1728 55%,#07111f);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{width:min(92vw,520px);padding:18px}
+.card{border:1px solid var(--line);background:var(--card);border-radius:26px;padding:24px;box-shadow:0 18px 55px #0006}
+.eyebrow{text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-size:12px;font-weight:800}
+.price{font-size:54px;line-height:1;font-weight:950;margin:12px 0 8px}
+.status{font-size:14px;color:var(--muted);line-height:1.45}
+.ok{color:var(--green)} .err{color:var(--red)}
+button{width:100%;margin-top:18px;border:1px solid var(--line);background:#edf4ff;color:#07111f;border-radius:15px;padding:13px;font-size:16px;font-weight:850}
+.small{margin-top:14px;color:#6f829c;font-size:11px;line-height:1.45}
+</style>
+</head>
+<body>
+<main>
+  <section class="card">
+    <div class="eyebrow">Česká republika · Natural 95</div>
+    <div id="price" class="price">Načítám…</div>
+    <div id="status" class="status">Zjišťuji aktuální cenu z online zdroje.</div>
+    <button onclick="loadFuelPrice()">↻ Načíst znovu</button>
+    <div class="small">
+      Zdroj: GlobalPetrolPrices přes textovou bránu r.jina.ai.<br>
+      Při výpadku se zobrazí poslední známá hodnota uložená v prohlížeči.
+    </div>
+  </section>
+</main>
+
+<script>
+const SOURCE_URL =
+  "https://r.jina.ai/http://www.globalpetrolprices.com/Czech-Republic/gasoline_prices/";
+
+const FALLBACK_PRICE = 39.04;
+
+function showPrice(value, message, ok=true){
+  document.getElementById("price").textContent =
+    Number(value).toLocaleString("cs-CZ",{minimumFractionDigits:2,maximumFractionDigits:2}) + " Kč/l";
+  const s=document.getElementById("status");
+  s.textContent=message;
+  s.className="status "+(ok?"ok":"err");
+}
+
+function parsePrice(text){
+  const patterns=[
+    /current gasoline price[^.]*?CZK\s*([0-9]+(?:[.,][0-9]+)?)/i,
+    /CZK\s*([0-9]+(?:[.,][0-9]+)?)\s*per liter/i,
+    /benz[ií]n[^.]*?([0-9]+(?:[.,][0-9]+)?)\s*(?:CZK|Kč)/i
+  ];
+  for(const p of patterns){
+    const m=text.match(p);
+    if(m) return Number(m[1].replace(",","."));
+  }
+  return null;
+}
+
+function parseDate(text){
+  const m=text.match(/updated on\s+([0-9]{1,2}-[A-Za-z]{3}-[0-9]{4})/i);
+  return m ? m[1] : new Date().toLocaleString("cs-CZ");
+}
+
+async function loadFuelPrice(){
+  document.getElementById("price").textContent="Načítám…";
+  const s=document.getElementById("status");
+  s.textContent="Zjišťuji aktuální cenu z online zdroje.";
+  s.className="status";
+
+  try{
+    const r=await fetch(SOURCE_URL+"?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const text=await r.text();
+    const price=parsePrice(text);
+    if(!price || price<20 || price>80) throw new Error("Cena nenalezena");
+
+    localStorage.setItem("fuelPriceCZ",String(price));
+    localStorage.setItem("fuelPriceDate",parseDate(text));
+    showPrice(price,"Online cena načtena · aktualizace "+parseDate(text),true);
+  }catch(e){
+    const saved=Number(localStorage.getItem("fuelPriceCZ"));
+    const savedDate=localStorage.getItem("fuelPriceDate");
+    if(saved){
+      showPrice(saved,"Online zdroj není dostupný · poslední uložená cena "+(savedDate||""),false);
+    }else{
+      showPrice(FALLBACK_PRICE,"Online zdroj není dostupný · zobrazena záložní cena",false);
+    }
+  }
+}
+
+loadFuelPrice();
+</script>
+</body>
+</html>
