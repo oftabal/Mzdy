@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>HDO Energie Master</title>
+<style>
+:root{--bg:#07111f;--card:#101d30;--line:#243650;--text:#f7fbff;--muted:#91a2bb;--green:#34d17d;--red:#ff6476;--yellow:#ffc857}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,#07111f,#0a1728 55%,#07111f);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:560px;margin:auto;padding:calc(15px + env(safe-area-inset-top)) 14px calc(24px + env(safe-area-inset-bottom))}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:23px;margin:0} .sub{color:var(--muted);font-size:12px;margin-top:3px}
+.auto{border:1px solid var(--line);background:#0d192a;color:#eef6ff;border-radius:13px;padding:9px 11px;font-weight:750}
+.tabs{display:flex;gap:8px;overflow:auto;padding:14px 0 3px}
+.tab{border:1px solid var(--line);background:#0d192a;color:#c9d6e8;padding:10px 14px;border-radius:999px;font-weight:800;white-space:nowrap}
+.tab.active{background:#edf4ff;color:#07111f}
+.hero{margin-top:11px;border:1px solid var(--line);background:var(--card);border-radius:26px;padding:22px;box-shadow:0 18px 55px #0005}
+.hero.nt{background:radial-gradient(circle at 82% 8%,#1f845555,transparent 38%),var(--card)}
+.hero.vt{background:radial-gradient(circle at 82% 8%,#a6374c55,transparent 38%),var(--card)}
+.eyebrow{text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-size:12px;font-weight:800}
+.status{font-size:39px;line-height:1.03;font-weight:950;margin:7px 0} .status.nt{color:var(--green)} .status.vt{color:var(--red)}
+.count{font-size:22px;font-weight:850;font-variant-numeric:tabular-nums} .next{color:var(--muted);margin-top:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px}
+.card{border:1px solid var(--line);background:var(--card);border-radius:20px;padding:16px;margin-top:10px}
+.grid .card{margin-top:0} .big{font-size:24px;font-weight:900;margin-top:5px}
+.recommend{border-color:#315f49;background:linear-gradient(135deg,#11291f,#101d30)}
+.warn{border-color:#71424b;background:linear-gradient(135deg,#2a171c,#101d30)}
+.carhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start} .name{font-weight:850;font-size:17px}
+.spec{color:var(--muted);font-size:12px;margin-top:3px} .badge{font-size:11px;background:#1b2b43;border-radius:99px;padding:5px 8px;color:#dce8f7;font-weight:800}
+.row{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.value{font-weight:850;text-align:right} .hint{font-size:11px;color:var(--muted);margin-top:8px}
+.rank{display:grid;gap:8px;margin-top:10px} .rankrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.rankrow:first-child{border-top:0} .fix{font-size:13px;color:var(--muted);margin-top:7px}
+details{margin-top:10px;border:1px solid var(--line);background:#0d192a;border-radius:18px;padding:14px}
+summary{font-weight:800;cursor:pointer} .footer{text-align:center;color:#6f829c;font-size:11px;line-height:1.45;margin:15px 5px}
+</style>
+</head>
+<body><main>
+<div class="top">
+  <div><h1>⚡ HDO Energie</h1><div id="mode" class="sub">Ruční volba</div></div>
+  <button class="auto" onclick="useGPS()">📍 Auto</button>
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<section id="hero" class="hero">
+  <div id="place" class="eyebrow"></div>
+  <div id="status" class="status"></div>
+  <div id="countdown" class="count"></div>
+  <div id="next" class="next"></div>
+</section>
+
+<section id="advice" class="card recommend">
+  <div class="eyebrow">Doporučení nabíjení</div>
+  <div id="adviceTitle" class="big"></div>
+  <div id="adviceText" class="sub"></div>
+</section>
+
+<div class="grid">
+  <div class="card"><div class="eyebrow">Elektřina teď</div><div id="price" class="big"></div><div id="tariff" class="sub"></div></div>
+  <div class="card"><div class="eyebrow">Natural 95</div><div id="fuel" class="big" onclick="editFuelPrice()" title="Upravit cenu" style="cursor:pointer"></div><div id="fuelDate" class="sub"></div><div class="sub"><a href="javascript:resetFuelPrice()">↺ výchozí</a></div></div>
+</div>
+
+<section class="card">
+  <div class="eyebrow">Kde je nejlevněji</div>
+  <div id="ranking" class="rank"></div>
+</section>
+
+<div id="cars"></div>
+
+<details>
+  <summary>Fixace a data</summary>
+  <div id="details"></div>
+</details>
+
+<div class="footer" id="footer"></div>
+</main>
+<script>
+const FALLBACK={"meta": {"version": "3.0", "updated": "2026-07-18", "note": "Průměrné ceny za kWh z posledních vyúčtování včetně DPH, bez stálých plateb. HDO časy jsou uložené lokálně."}, "fuel": {"natural95": 39.04, "updated": "2026-07-18"}, "places": [{"id": "stankov", "name": "Staňkov", "icon": "🏡", "lat": 49.553, "lon": 13.07, "address": "Trnkova 305, 345 61 Staňkov", "ean": "859182400890879927", "tariff": "D45d", "breaker": "3×35 A", "product": "Elektřina Fix na 3 roky", "vt": 5.15, "nt": 4.37, "fixEnd": "2027-12-20", "billingPeriod": "4. 3. 2025 – 22. 3. 2026", "advance": 2400, "hdoCode": "a1b6dp01", "schedule": {"weekday": [[0, 51], [110, 331], [390, 511], [570, 751], [810, 1440]], "weekend": [[0, 30], [90, 586], [645, 901], [959, 1316], [1375, 1440]], "exceptions": {"2026-09-28": [[0, 30], [90, 586], [645, 901], [959, 1316], [1375, 1440]], "2026-10-28": [[0, 30], [90, 586], [645, 901], [959, 1316], [1375, 1440]], "2026-11-17": [[0, 30], [90, 586], [645, 901], [959, 1316], [1375, 1440]]}}}, {"id": "ruda", "name": "Železná Ruda", "icon": "🏔️", "lat": 49.137, "lon": 13.235, "address": "K vodárně 407/27, 340 04 Železná Ruda", "ean": "859182400801332169", "tariff": "D57d", "breaker": "3×25 A", "product": "Elektřina Bez starostí na 3 roky", "vt": 4.51, "nt": 3.82, "fixEnd": "2027-10-03", "billingPeriod": "24. 4. 2025 – 31. 3. 2026", "advance": 4300, "schedule": {"weekday": [[0, 380], [440, 535], [595, 840], [900, 1200], [1260, 1440]], "weekend": [[0, 525], [585, 750], [810, 1050], [1110, 1230], [1290, 1440]], "exceptions": {}}}, {"id": "cheb", "name": "Cheb", "icon": "🏠", "lat": 50.079, "lon": 12.373, "address": "Pod Rozhlednou 2594/8, 350 02 Cheb", "ean": "859182400894975663", "tariff": "D02d", "breaker": "3×25 A", "product": "Elektřina Bez starostí na 3 roky", "vt": 6.74, "nt": null, "fixEnd": "2028-02-18", "billingPeriod": "25. 4. 2025 – 21. 4. 2026", "advance": 3870, "single": true}], "vehicles": [{"id": "xc90", "name": "Volvo XC90 T8", "type": "PHEV", "battery": 18.8, "consumption": 26, "fuelConsumption": 8}, {"id": "cx80", "name": "Mazda CX-80 PHEV", "type": "PHEV", "battery": 17.8, "consumption": 24, "fuelConsumption": 7}, {"id": "eqs", "name": "Mercedes EQS SUV", "type": "EV · pro radost", "battery": 118, "consumption": 25, "fuelConsumption": null}]};
+let DATA=FALLBACK;
+let current=localStorage.getItem("hdoLocation")||"stankov";
+
+const pad=n=>String(n).padStart(2,"0");
+const fmtMoney=n=>Number(n).toLocaleString("cs-CZ",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtClock=m=>`${pad(Math.floor((m%1440)/60))}:${pad(Math.floor(m%60))}`;
+const dateKey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const dateCS=iso=>new Date(iso+"T12:00:00").toLocaleDateString("cs-CZ");
+const daysLeft=iso=>Math.ceil((new Date(iso+"T23:59:59")-new Date())/86400000);
+
+async function loadData(){
+  try{
+    const r=await fetch("energie.json?"+Date.now(),{cache:"no-store"});
+    if(r.ok) DATA=await r.json();
+  }catch(e){}
+  if(!DATA.places.some(p=>p.id===current)) current=DATA.places[0].id;
+  buildTabs(); render();
+}
+
+function intervalsFor(loc,d){
+  if(loc.single)return null;
+  const s=loc.schedule;
+  if(s.exceptions&&s.exceptions[dateKey(d)])return s.exceptions[dateKey(d)];
+  return (d.getDay()===0||d.getDay()===6)?s.weekend:s.weekday;
+}
+function stateAt(loc,d){
+  if(loc.single)return {nt:false,next:null};
+  const arr=intervalsFor(loc,d);
+  const now=d.getHours()*60+d.getMinutes()+d.getSeconds()/60;
+  for(const [s,e] of arr){
+    if(now>=s&&now<e)return {nt:true,next:e};
+    if(now<s)return {nt:false,next:s};
+  }
+  const tomorrow=new Date(d);tomorrow.setDate(d.getDate()+1);
+  const nextArr=intervalsFor(loc,tomorrow);
+  return {nt:false,next:1440+nextArr[0][0]};
+}
+function durationText(mins){
+  const sec=Math.max(0,Math.round(mins*60));
+  const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
+  return `${h}:${pad(m)}:${pad(s)}`;
+}
+function buildTabs(){
+  document.getElementById("tabs").innerHTML=DATA.places.map(p=>`<button class="tab" data-loc="${p.id}">${p.name}</button>`).join("");
+  document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+    current=b.dataset.loc; localStorage.setItem("hdoLocation",current);
+    document.getElementById("mode").textContent="Ruční volba"; render();
+  });
+}
+function renderCars(powerPrice){
+  document.getElementById("cars").innerHTML=DATA.vehicles.map(c=>{
+    const charge=c.battery*powerPrice;
+    const elecKm=c.consumption/100*powerPrice;
+    const fuelKm=c.fuelConsumption==null?null:c.fuelConsumption/100*DATA.fuel.natural95;
+    return `<section class="card">
+      <div class="carhead"><div><div class="name">${c.name}</div><div class="spec">${c.battery.toLocaleString("cs-CZ")} kWh · ${c.consumption} kWh/100 km</div></div><div class="badge">${c.type}</div></div>
+      <div class="row"><span>Plné nabití</span><span class="value">${Math.round(charge).toLocaleString("cs-CZ")} Kč</span></div>
+      <div class="row"><span>${fuelKm===null?"Cena jízdy":"Elektřina / benzín"}</span><span class="value">${fmtMoney(elecKm)}${fuelKm===null?"":` / ${fmtMoney(fuelKm)}`} Kč/km</span></div>
+    </section>`;
+  }).join("");
+}
+function renderRanking(){
+  const rows=DATA.places.map(p=>({...p,compare:p.nt??p.vt})).sort((a,b)=>a.compare-b.compare);
+  const best=rows[0].compare;
+  document.getElementById("ranking").innerHTML=rows.map((p,i)=>`<div class="rankrow">
+    <span>${i===0?"🥇":i===1?"🥈":"🥉"} ${p.name}</span>
+    <span class="value">${fmtMoney(p.compare)} Kč/kWh${i?` · +${fmtMoney(p.compare-best)}`:""}</span>
+  </div>`).join("");
+}
+function renderDetails(){
+  document.getElementById("details").innerHTML=DATA.places.map(p=>`<div class="row">
+    <span><b>${p.name}</b><div class="fix">${p.product} · ${p.tariff} · ${p.breaker}</div></span>
+    <span class="value">do ${dateCS(p.fixEnd)}<div class="fix">${daysLeft(p.fixEnd)} dní</div></span>
+  </div>`).join("");
+}
+function render(){
+  const d=new Date(),loc=DATA.places.find(p=>p.id===current),st=stateAt(loc,d);
+  const now=d.getHours()*60+d.getMinutes()+d.getSeconds()/60;
+  const hero=document.getElementById("hero"),status=document.getElementById("status");
+  document.getElementById("place").textContent=loc.name;
+  hero.className="hero "+(loc.single?"vt":st.nt?"nt":"vt");
+
+  if(loc.single){
+    status.textContent="JEDNOTARIF"; status.className="status vt";
+    document.getElementById("countdown").textContent="Bez změny tarifu";
+    document.getElementById("next").textContent=`${loc.tariff} · bez NT/VT`;
+  }else{
+    status.textContent=st.nt?"NÍZKÝ TARIF":"VYSOKÝ TARIF";
+    status.className="status "+(st.nt?"nt":"vt");
+    document.getElementById("countdown").textContent="Za "+durationText(st.next-now);
+    document.getElementById("next").textContent=`Další změna v ${fmtClock(st.next)}`;
+  }
+
+  const p=loc.single?loc.vt:(st.nt?loc.nt:loc.vt);
+  document.getElementById("price").textContent=fmtMoney(p)+" Kč";
+  document.getElementById("tariff").textContent="za kWh · "+(loc.single?loc.tariff:st.nt?"NT":"VT");
+  document.getElementById("fuel").textContent=fmtMoney(DATA.fuel.natural95)+" Kč/l";
+  document.getElementById("fuelDate").textContent="údaj k "+dateCS(DATA.fuel.updated);
+
+  const advice=document.getElementById("advice");
+  if(loc.single){
+    advice.className="card warn";
+    document.getElementById("adviceTitle").textContent="🔴 Raději nenabíjet";
+    document.getElementById("adviceText").textContent="Cheb je nejdražší a nemá nízký tarif.";
+  }else if(st.nt){
+    advice.className="card recommend";
+    document.getElementById("adviceTitle").textContent="🟢 Nabíjej teď";
+    document.getElementById("adviceText").textContent=`Právě běží NT za ${fmtMoney(loc.nt)} Kč/kWh.`;
+  }else{
+    advice.className="card warn";
+    document.getElementById("adviceTitle").textContent="🟡 Počkej na NT";
+    document.getElementById("adviceText").textContent=`NT začne v ${fmtClock(st.next)} a bude o ${fmtMoney(loc.vt-loc.nt)} Kč/kWh levnější.`;
+  }
+
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.loc===current));
+  renderCars(p); renderRanking(); renderDetails();
+  document.getElementById("footer").textContent=`HDO Energie v${DATA.meta.version} · aktualizace ${dateCS(DATA.meta.updated)} · data z energie.json, s vestavěnou zálohou`;
+}
+function distance(a,b,c,d){
+  const R=6371,q=Math.PI/180,x=(c-a)*q,y=(d-b)*q;
+  const z=Math.sin(x/2)**2+Math.cos(a*q)*Math.cos(c*q)*Math.sin(y/2)**2;
+  return 2*R*Math.asin(Math.sqrt(z));
+}
+function useGPS(){
+  if(!navigator.geolocation){alert("Poloha není dostupná.");return;}
+  navigator.geolocation.getCurrentPosition(p=>{
+    let best=DATA.places[0].id,dist=Infinity;
+    for(const l of DATA.places){
+      const d=distance(p.coords.latitude,p.coords.longitude,l.lat,l.lon);
+      if(d<dist){best=l.id;dist=d;}
+    }
+    current=best;localStorage.setItem("hdoLocation",current);
+    document.getElementById("mode").textContent=`Auto · ${DATA.places.find(x=>x.id===current).name} · ${Math.round(dist)} km`;
+    render();
+  },()=>alert("Povolte prosím polohu pro tuto stránku."));
+}
+
+function editFuelPrice(){
+ const cur=localStorage.getItem('manualFuelPrice')||DATA.fuel.natural95;
+ const s=prompt('Cena Natural 95 (Kč/l):',String(cur).replace('.',','));
+ if(s===null)return;
+ const v=parseFloat(s.replace(',','.'));
+ if(isNaN(v))return;
+ localStorage.setItem('manualFuelPrice',v);
+ localStorage.setItem('manualFuelDate',new Date().toISOString().slice(0,10));
+ DATA.fuel.natural95=v;
+ DATA.fuel.updated=localStorage.getItem('manualFuelDate');
+ render();
+}
+function resetFuelPrice(){
+ localStorage.removeItem('manualFuelPrice');
+ localStorage.removeItem('manualFuelDate');
+ DATA.fuel.natural95=FALLBACK.fuel.natural95;
+ DATA.fuel.updated=FALLBACK.fuel.updated;
+ render();
+}
+const __mp=localStorage.getItem('manualFuelPrice');
+if(__mp){
+ DATA.fuel.natural95=parseFloat(__mp);
+ DATA.fuel.updated=localStorage.getItem('manualFuelDate')||DATA.fuel.updated;
+}
+loadData(); setInterval(render,1000);
+
+</script>
+</body></html>
