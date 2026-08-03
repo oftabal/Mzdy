@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Optika Dashboard</title>
+<style>
+body{font-family:system-ui,Arial,sans-serif;background:#f4f6f9;margin:20px}
+.card{background:#fff;border-radius:12px;padding:16px;max-width:1100px;margin:auto;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+table{width:100%;border-collapse:collapse;margin-top:16px}
+th,td{padding:8px;border-bottom:1px solid #ddd;text-align:right}
+th:first-child,td:first-child{text-align:left}
+input{padding:8px;margin:4px}
+button{padding:10px 16px;border:0;border-radius:8px;background:#1565c0;color:#fff;cursor:pointer}
+h1{margin-top:0}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>📊 Optika Dashboard</h1>
+
+<div>
+<input type="month" id="m">
+<input type="number" id="p" placeholder="Příjem">
+<input type="number" id="v" placeholder="Výdej">
+<input type="number" id="k" placeholder="Karty">
+<input type="number" id="q" placeholder="QR">
+<button onclick="add()">Přidat měsíc</button>
+</div>
+
+<table>
+<thead>
+<tr><th>Měsíc</th><th>Příjem</th><th>Výdej</th><th>Hotovost</th><th>Karty</th><th>QR</th><th>Celkem</th></tr>
+</thead>
+<tbody id="tb"></tbody>
+</table>
+
+<h3>📋 Import JSON z ChatGPT</h3>
+<textarea id="json" style="width:100%;height:120px"></textarea><br>
+<button onclick="importJson()">Importovat</button>
+
+<script>
+let data=[
+{mesic:"2026-06",prijem:0,vydej:0,karty:59083,qr:73701},
+{mesic:"2026-07",prijem:72937,vydej:19009,karty:73922,qr:57084}
+];
+
+function draw(){
+tb.innerHTML="";
+data.sort((a,b)=>a.mesic.localeCompare(b.mesic));
+data.forEach(x=>{
+let hot=x.prijem-x.vydej;
+let cel=hot+x.karty+x.qr;
+tb.innerHTML+=`<tr><td>${x.mesic}</td><td>${x.prijem}</td><td>${x.vydej}</td><td>${hot}</td><td>${x.karty}</td><td>${x.qr}</td><td><b>${cel}</b></td></tr>`;
+});
+}
+function add(){
+data.push({
+mesic:m.value,
+prijem:+p.value,
+vydej:+v.value,
+karty:+k.value,
+qr:+q.value
+});
+draw();
+}
+function importJson(){
+try{
+let obj=JSON.parse(json.value);
+data.push(obj);
+draw();
+}catch(e){alert("Neplatný JSON");}
+}
+draw();
+</script>
+</div>
+</body>
+</html>
