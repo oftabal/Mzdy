@@ -1,0 +1,414 @@
+
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5b5ce2">
+<title>OFTABAL HR Manager</title>
+<style>
+:root{
+  --bg:#f3f5fb;--card:#fff;--text:#172033;--muted:#6b7280;--line:#e6e9f1;
+  --primary:#5b5ce2;--primary2:#8b5cf6;--green:#dcfce7;--green-t:#166534;
+  --yellow:#fef3c7;--yellow-t:#92400e;--red:#fee2e2;--red-t:#991b1b;
+  --blue:#dbeafe;--blue-t:#1e40af;--violet:#ede9fe;--violet-t:#5b21b6;
+  --shadow:0 12px 35px rgba(27,34,58,.10)
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:linear-gradient(180deg,#eef2ff 0,#f7f8fc 36%,#f3f5fb 100%);
+  color:var(--text);min-height:100vh
+}
+.header{
+  background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;
+  padding:calc(18px + env(safe-area-inset-top)) 18px 28px;border-radius:0 0 30px 30px;
+  box-shadow:var(--shadow)
+}
+.header-inner{max-width:900px;margin:auto;display:flex;justify-content:space-between;gap:16px;align-items:center}
+.header h1{margin:0;font-size:28px}.header p{margin:5px 0 0;opacity:.9}
+.pill{background:#ffffff26;border:1px solid #ffffff3d;padding:7px 11px;border-radius:999px;font-weight:700;font-size:13px;white-space:nowrap}
+.wrap{max-width:900px;margin:auto;padding:18px 14px 100px}
+.card{background:var(--card);border-radius:22px;padding:17px;margin:14px 0;box-shadow:var(--shadow)}
+.topbar{display:grid;grid-template-columns:1.2fr 1fr auto;gap:10px;align-items:end}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:0 0 6px}
+.field select,.field input{
+  width:100%;border:1px solid var(--line);background:#fafbff;color:var(--text);
+  padding:12px;border-radius:13px;font-size:16px;outline:none
+}
+.btn{
+  border:0;border-radius:13px;padding:12px 15px;font-size:15px;font-weight:750;cursor:pointer;
+  background:#eef0ff;color:#3838a8
+}
+.btn.primary{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff}
+.btn.danger{background:#fff1f2;color:#be123c}
+.person{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.person-left{display:flex;align-items:center;gap:12px}
+.avatar{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:21px;font-weight:800;background:var(--violet);color:var(--violet-t)}
+.person-name{font-size:20px;font-weight:800}.small{font-size:13px;color:var(--muted);margin-top:3px}
+.status{padding:7px 11px;border-radius:999px;font-size:13px;font-weight:800;background:var(--green);color:var(--green-t)}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tile{border-radius:17px;background:#f8faff;padding:14px;min-height:93px}
+.tile .lab{font-size:12px;font-weight:700;color:var(--muted)}
+.tile .val{font-size:23px;font-weight:850;margin-top:6px}
+.tile .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.cal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.month-title{font-size:20px;font-weight:850}.nav{display:flex;gap:8px}
+.nav button{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:20px;cursor:pointer}
+.weekdays,.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+.weekdays div{text-align:center;color:var(--muted);font-size:12px;font-weight:800;padding:4px}
+.day{
+  min-height:76px;border:1px solid var(--line);background:#fbfcff;border-radius:14px;padding:8px;
+  cursor:pointer;position:relative;transition:.15s
+}
+.day:hover{transform:translateY(-1px);box-shadow:0 7px 18px #1f293710}
+.day.empty{visibility:hidden}.day.weekend{background:#f2f3f6}.day.holiday{outline:2px solid #f59e0b22;background:#fff8e8}
+.num{font-weight:800;font-size:14px}
+.tag{position:absolute;left:6px;right:6px;bottom:6px;border-radius:8px;padding:4px 5px;font-size:10px;text-align:center;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-prace{background:var(--green);color:var(--green-t)}
+.t-dovolena{background:var(--yellow);color:var(--yellow-t)}
+.t-nemoc{background:var(--red);color:var(--red-t)}
+.t-lekar{background:var(--blue);color:var(--blue-t)}
+.t-skoleni{background:var(--violet);color:var(--violet-t)}
+.holiday-dot{position:absolute;right:7px;top:7px;width:7px;height:7px;border-radius:50%;background:#f59e0b}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.note{font-size:12px;color:var(--muted);line-height:1.45}
+dialog{border:0;border-radius:22px;padding:0;width:min(92vw,420px);box-shadow:0 30px 90px #0005}
+dialog::backdrop{background:#10182877;backdrop-filter:blur(3px)}
+.dialog-in{padding:18px}.dialog-title{font-size:20px;font-weight:850;margin:0 0 12px}
+.types{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.typebtn{border:0;border-radius:14px;padding:13px;font-size:15px;font-weight:800;text-align:left;cursor:pointer}
+.close-row{display:flex;justify-content:flex-end;margin-top:12px}
+.footer{
+  position:fixed;z-index:4;left:0;right:0;bottom:0;padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+  background:#ffffffeb;border-top:1px solid var(--line);backdrop-filter:blur(14px)
+}
+.footer-inner{max-width:900px;margin:auto;display:flex;justify-content:space-around;color:var(--muted);font-size:12px;font-weight:700}
+.footer-item{text-align:center}.footer-item span{display:block;font-size:20px;margin-bottom:2px}
+@media(max-width:720px){
+  .topbar{grid-template-columns:1fr 1fr}.topbar .btn{grid-column:1/-1}
+  .summary{grid-template-columns:1fr 1fr}.day{min-height:65px;padding:6px}.tag{font-size:9px}
+}
+@media(max-width:430px){
+  .wrap{padding-left:10px;padding-right:10px}.card{border-radius:18px;padding:14px}
+  .weekdays,.calendar{gap:4px}.day{min-height:57px;border-radius:11px}
+  .tag{left:3px;right:3px;bottom:3px;padding:3px 2px}
+}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-inner">
+    <div><h1>👥 OFTABAL HR Manager</h1><p>Docházka a dovolená</p></div>
+    <div class="pill">offline • ukládá se samo</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card topbar">
+    <div class="field">
+      <label>Zaměstnanec</label>
+      <select id="emp">
+        <option value="zdenka">Zdeňka Šmidrkalová</option>
+        <option value="lucie">MUDr. Lucie Marschová</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Měsíc</label>
+      <input id="monthPicker" type="month">
+    </div>
+    <button class="btn primary" id="todayBtn">Dnešní měsíc</button>
+  </section>
+
+  <section class="card person">
+    <div class="person-left">
+      <div class="avatar" id="avatar">ZŠ</div>
+      <div>
+        <div class="person-name" id="personName"></div>
+        <div class="small" id="personMeta"></div>
+      </div>
+    </div>
+    <div class="status" id="status">✓ OK</div>
+  </section>
+
+  <section class="summary" id="summary"></section>
+
+  <section class="card">
+    <div class="cal-head">
+      <div class="month-title" id="monthTitle"></div>
+      <div class="nav">
+        <button id="prevBtn">‹</button>
+        <button id="nextBtn">›</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="fillBtn">✨ Vyplnit měsíc</button>
+      <button class="btn danger" id="clearBtn">Vymazat měsíc</button>
+    </div>
+
+    <div class="weekdays">
+      <div>Po</div><div>Út</div><div>St</div><div>Čt</div><div>Pá</div><div>So</div><div>Ne</div>
+    </div>
+    <div class="calendar" id="calendar"></div>
+    <p class="note">Klepni na den a vyber typ. České státní svátky jsou označené oranžovou tečkou.</p>
+  </section>
+
+  <section class="card">
+    <div class="actions">
+      <button class="btn" id="exportBtn">Export JSON</button>
+      <label class="btn" style="display:inline-flex;align-items:center;cursor:pointer">
+        Import JSON<input id="importFile" type="file" accept="application/json" hidden>
+      </label>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-item"><span>🏠</span>Přehled</div>
+    <div class="footer-item"><span>📅</span>Docházka</div>
+    <div class="footer-item"><span>💾</span>Záloha</div>
+  </div>
+</footer>
+
+<dialog id="dlg">
+  <div class="dialog-in">
+    <div class="dialog-title" id="dlgTitle"></div>
+    <div class="types">
+      <button class="typebtn t-prace" data-type="prace">✅ Práce</button>
+      <button class="typebtn t-dovolena" data-type="dovolena">🏖️ Dovolená</button>
+      <button class="typebtn t-nemoc" data-type="nemoc">🤒 Nemoc</button>
+      <button class="typebtn t-lekar" data-type="lekar">🩺 Lékař</button>
+      <button class="typebtn t-skoleni" data-type="skoleni">📚 Školení</button>
+      <button class="typebtn" data-type="">❌ Vymazat</button>
+    </div>
+    <div class="close-row"><button class="btn" id="closeDlg">Zavřít</button></div>
+  </div>
+</dialog>
+
+<script>
+'use strict';
+
+const EMPLOYEES = {
+  zdenka: {
+    name: 'Zdeňka Šmidrkalová',
+    initials: 'ZŠ',
+    contract: 'HPP 0,8 • 6,4 h denně',
+    dailyHours: 6.4,
+    workdays: [1,2,3,4,5]
+  },
+  lucie: {
+    name: 'MUDr. Lucie Marschová',
+    initials: 'LM',
+    contract: 'HPP 0,3 • výchozí rozvrh út + pá',
+    dailyHours: 6,
+    workdays: [2,5]
+  }
+};
+
+const TYPES = {
+  prace:'Práce',
+  dovolena:'Dovolená',
+  nemoc:'Nemoc',
+  lekar:'Lékař',
+  skoleni:'Školení'
+};
+
+const MONTHS = ['leden','únor','březen','duben','květen','červen','červenec','srpen','září','říjen','listopad','prosinec'];
+const $ = id => document.getElementById(id);
+let current = new Date();
+current.setDate(1);
+let selectedKey = '';
+
+function storeKey(){ return 'oftabal_hr_build001'; }
+function loadAll(){
+  try { return JSON.parse(localStorage.getItem(storeKey()) || '{}'); }
+  catch { return {}; }
+}
+function saveAll(data){ localStorage.setItem(storeKey(), JSON.stringify(data)); }
+function empId(){ return $('emp').value; }
+function ym(){ return `${current.getFullYear()}-${String(current.getMonth()+1).padStart(2,'0')}`; }
+
+function ensureMonth(){
+  const all = loadAll();
+  const e = empId(), k = ym();
+  all[e] ??= {};
+  all[e][k] ??= {days:{}};
+  all[e][k].days ??= {};
+  return all;
+}
+function getMonthData(){ return ensureMonth()[empId()][ym()]; }
+function saveMonthData(md){
+  const all = ensureMonth();
+  all[empId()][ym()] = md;
+  saveAll(all);
+}
+
+function easterSunday(y){
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,
+        f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),
+        h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,
+        l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+        month=Math.floor((h+l-7*m+114)/31),
+        day=((h+l-7*m+114)%31)+1;
+  return new Date(y,month-1,day);
+}
+
+function holidayName(date){
+  const y=date.getFullYear(), m=date.getMonth()+1, d=date.getDate();
+  const fixed={
+    '1-1':'Nový rok','5-1':'Svátek práce','5-8':'Den vítězství',
+    '7-5':'Cyril a Metoděj','7-6':'Jan Hus','9-28':'Den české státnosti',
+    '10-28':'Vznik Československa','11-17':'Den boje za svobodu',
+    '12-24':'Štědrý den','12-25':'1. svátek vánoční','12-26':'2. svátek vánoční'
+  };
+  if(fixed[`${m}-${d}`]) return fixed[`${m}-${d}`];
+  const easter=easterSunday(y);
+  const goodFriday=new Date(easter); goodFriday.setDate(easter.getDate()-2);
+  const easterMonday=new Date(easter); easterMonday.setDate(easter.getDate()+1);
+  if(date.toDateString()===goodFriday.toDateString()) return 'Velký pátek';
+  if(date.toDateString()===easterMonday.toDateString()) return 'Velikonoční pondělí';
+  return '';
+}
+
+function dateKey(y,m,d){ return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+
+function render(){
+  const emp = EMPLOYEES[empId()];
+  $('avatar').textContent = emp.initials;
+  $('personName').textContent = emp.name;
+  $('personMeta').textContent = emp.contract;
+  $('monthPicker').value = ym();
+  $('monthTitle').textContent = `${MONTHS[current.getMonth()]} ${current.getFullYear()}`;
+
+  const md = getMonthData();
+  const counts = {prace:0,dovolena:0,nemoc:0,lekar:0,skoleni:0};
+  Object.values(md.days).forEach(v => { if(counts[v]!==undefined) counts[v]++; });
+
+  const hours = counts.prace * emp.dailyHours;
+  $('summary').innerHTML = `
+    <div class="tile"><div class="lab">Odpracováno</div><div class="val">${hours.toFixed(1)} h</div><div class="sub">${counts.prace} dní</div></div>
+    <div class="tile"><div class="lab">Dovolená</div><div class="val">${counts.dovolena}</div><div class="sub">pracovních dní</div></div>
+    <div class="tile"><div class="lab">Nemoc</div><div class="val">${counts.nemoc}</div><div class="sub">dní</div></div>
+    <div class="tile"><div class="lab">Lékař / školení</div><div class="val">${counts.lekar + counts.skoleni}</div><div class="sub">${counts.lekar} + ${counts.skoleni}</div></div>
+  `;
+
+  const cal = $('calendar');
+  cal.innerHTML = '';
+  const y=current.getFullYear(), m=current.getMonth();
+  const first = new Date(y,m,1);
+  const offset = (first.getDay()+6)%7;
+  const days = new Date(y,m+1,0).getDate();
+
+  for(let i=0;i<offset;i++){
+    const e=document.createElement('div');
+    e.className='day empty';
+    cal.appendChild(e);
+  }
+
+  for(let d=1;d<=days;d++){
+    const dt=new Date(y,m,d);
+    const key=dateKey(y,m,d);
+    const type=md.days[key] || '';
+    const hol=holidayName(dt);
+
+    const div=document.createElement('div');
+    div.className='day';
+    if(dt.getDay()===0 || dt.getDay()===6) div.classList.add('weekend');
+    if(hol) div.classList.add('holiday');
+
+    div.innerHTML = `<div class="num">${d}</div>${hol?'<div class="holiday-dot"></div>':''}${type?`<div class="tag t-${type}">${TYPES[type]}</div>`:''}`;
+    div.title = hol || '';
+    div.onclick = () => {
+      selectedKey = key;
+      $('dlgTitle').textContent = `${d}. ${m+1}. ${y}${hol ? ' • '+hol : ''}`;
+      $('dlg').showModal();
+    };
+    cal.appendChild(div);
+  }
+}
+
+function setType(type){
+  const md = getMonthData();
+  if(type) md.days[selectedKey]=type;
+  else delete md.days[selectedKey];
+  saveMonthData(md);
+  $('dlg').close();
+  render();
+}
+
+function fillMonth(){
+  if(!confirm('Vyplnit pracovní dny jako práci? Víkendy a svátky zůstanou prázdné.')) return;
+  const emp=EMPLOYEES[empId()];
+  const md=getMonthData();
+  const y=current.getFullYear(),m=current.getMonth();
+  const days=new Date(y,m+1,0).getDate();
+  for(let d=1;d<=days;d++){
+    const dt=new Date(y,m,d);
+    const key=dateKey(y,m,d);
+    if(emp.workdays.includes(dt.getDay()) && !holidayName(dt) && !md.days[key]){
+      md.days[key]='prace';
+    }
+  }
+  saveMonthData(md);
+  render();
+}
+
+function clearMonth(){
+  if(!confirm('Opravdu vymazat celý tento měsíc?')) return;
+  const md=getMonthData();
+  md.days={};
+  saveMonthData(md);
+  render();
+}
+
+function exportJson(){
+  const blob=new Blob([JSON.stringify(loadAll(),null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='oftabal_hr_zaloha.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+$('emp').addEventListener('change',render);
+$('monthPicker').addEventListener('change',e=>{
+  const [y,m]=e.target.value.split('-').map(Number);
+  current=new Date(y,m-1,1);
+  render();
+});
+$('todayBtn').onclick=()=>{current=new Date();current.setDate(1);render();};
+$('prevBtn').onclick=()=>{current.setMonth(current.getMonth()-1);render();};
+$('nextBtn').onclick=()=>{current.setMonth(current.getMonth()+1);render();};
+$('fillBtn').onclick=fillMonth;
+$('clearBtn').onclick=clearMonth;
+$('exportBtn').onclick=exportJson;
+$('closeDlg').onclick=()=> $('dlg').close();
+
+document.querySelectorAll('.typebtn').forEach(btn=>{
+  btn.onclick=()=>setType(btn.dataset.type);
+});
+
+$('importFile').addEventListener('change',e=>{
+  const file=e.target.files?.[0];
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result);
+      localStorage.setItem(storeKey(),JSON.stringify(data));
+      alert('Import hotov.');
+      render();
+    }catch{
+      alert('Neplatný JSON soubor.');
+    }
+  };
+  r.readAsText(file);
+  e.target.value='';
+});
+
+render();
+</script>
+</body>
+</html>
