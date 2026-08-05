@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5b5ce2">
+<title>OFTABAL HR Manager – Build 006 Turso</title>
+<style>
+:root{--bg:#f3f5fb;--card:#fff;--text:#172033;--muted:#6b7280;--line:#e6e9f1;--primary:#5b5ce2;--primary2:#8b5cf6;--green:#dcfce7;--green-t:#166534;--yellow:#fef3c7;--yellow-t:#92400e;--red:#fee2e2;--red-t:#991b1b;--blue:#dbeafe;--blue-t:#1e40af;--violet:#ede9fe;--violet-t:#5b21b6;--shadow:0 12px 35px rgba(27,34,58,.10)}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef2ff 0,#f7f8fc 34%,#f3f5fb 100%);color:var(--text);min-height:100vh}
+.header{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;padding:calc(18px + env(safe-area-inset-top)) 18px 28px;border-radius:0 0 30px 30px;box-shadow:var(--shadow)}
+.header-inner{max-width:980px;margin:auto;display:flex;justify-content:space-between;gap:16px;align-items:center}.header h1{margin:0;font-size:28px}.header p{margin:5px 0 0;opacity:.9}.pill{background:#ffffff26;border:1px solid #ffffff3d;padding:7px 11px;border-radius:999px;font-weight:700;font-size:13px;white-space:nowrap}
+.wrap{max-width:980px;margin:auto;padding:18px 14px 110px}.card{background:var(--card);border-radius:22px;padding:17px;margin:14px 0;box-shadow:var(--shadow)}
+.topbar{display:grid;grid-template-columns:1.3fr 1fr auto;gap:10px;align-items:end}.field label{display:block;font-size:12px;font-weight:750;color:var(--muted);margin:0 0 6px}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);background:#fafbff;color:var(--text);padding:12px;border-radius:13px;font:inherit;outline:none}.field textarea{min-height:78px;resize:vertical}
+.btn{border:0;border-radius:13px;padding:12px 15px;font-size:15px;font-weight:780;cursor:pointer;background:#eef0ff;color:#3838a8}.btn.primary{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff}.btn.danger{background:#fff1f2;color:#be123c}.btn:active{transform:translateY(1px)}
+.person{display:flex;align-items:center;justify-content:space-between;gap:12px}.person-left{display:flex;align-items:center;gap:12px}.avatar{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:21px;font-weight:850;background:var(--violet);color:var(--violet-t)}.person-name{font-size:20px;font-weight:850}.small{font-size:13px;color:var(--muted);margin-top:3px}.status{padding:7px 11px;border-radius:999px;font-size:13px;font-weight:850;background:var(--green);color:var(--green-t)}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.tile{border-radius:17px;background:#f8faff;padding:14px;min-height:93px}.tile .lab{font-size:12px;font-weight:750;color:var(--muted)}.tile .val{font-size:23px;font-weight:880;margin-top:6px}.tile .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.cal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.month-title{font-size:20px;font-weight:850}.nav{display:flex;gap:8px}.nav button{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:20px;cursor:pointer}
+.weekdays,.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}.weekdays div{text-align:center;color:var(--muted);font-size:12px;font-weight:850;padding:4px}.day{min-height:88px;border:1px solid var(--line);background:#fbfcff;border-radius:14px;padding:8px;cursor:pointer;position:relative}.day.empty{visibility:hidden}.day.weekend{background:#f2f3f6}.day.holiday{outline:2px solid #f59e0b22;background:#fff8e8}.day.scheduled{box-shadow:inset 0 0 0 2px #5b5ce218}.num{font-weight:850;font-size:14px}.tag{position:absolute;left:5px;right:5px;bottom:5px;border-radius:8px;padding:4px 3px;font-size:9px;text-align:center;font-weight:850}.t-prace{background:var(--green);color:var(--green-t)}.t-dovolena{background:var(--yellow);color:var(--yellow-t)}.t-nemoc{background:var(--red);color:var(--red-t)}.t-lekar{background:var(--blue);color:var(--blue-t)}.t-skoleni{background:var(--violet);color:var(--violet-t)}.holiday-dot{position:absolute;right:7px;top:7px;width:7px;height:7px;border-radius:50%;background:#f59e0b}.metrics{font-size:10px;color:#4b5563;line-height:1.3;margin-top:8px;font-weight:700}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:14px}.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.note{font-size:12px;color:var(--muted);line-height:1.45}.alertbox{padding:13px 14px;border-radius:14px;margin-top:12px;background:#ecfdf3;color:#067647;font-weight:700;line-height:1.4}.output{white-space:pre-wrap;background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:14px;min-height:220px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.45}
+dialog{border:0;border-radius:22px;padding:0;width:min(92vw,430px);box-shadow:0 30px 90px #0005}dialog::backdrop{background:#10182877;backdrop-filter:blur(3px)}.dialog-in{padding:18px}.dialog-title{font-size:20px;font-weight:850;margin:0 0 12px}.types{display:grid;grid-template-columns:1fr 1fr;gap:9px}.typebtn{border:0;border-radius:14px;padding:13px;font-size:15px;font-weight:800;text-align:left;cursor:pointer}.close-row{display:flex;justify-content:flex-end;margin-top:12px}
+.footer{position:fixed;z-index:4;left:0;right:0;bottom:0;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:#ffffffeb;border-top:1px solid var(--line);backdrop-filter:blur(14px)}.footer-inner{max-width:900px;margin:auto;display:flex;justify-content:space-around;color:var(--muted);font-size:12px;font-weight:750}.footer-item{cursor:pointer;text-align:center;padding:4px 10px;border-radius:12px}.footer-item.active{color:var(--primary);background:#eef0ff}.footer-item span{display:block;font-size:20px;margin-bottom:2px}.hidden{display:none!important}
+.settings-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.switchrow{display:flex;gap:8px;align-items:center;background:#f8faff;padding:11px 12px;border-radius:14px}
+.switchrow input{width:20px;height:20px}
+.days-pick{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.daycheck{display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid var(--line);border-radius:12px;padding:9px 4px;background:#fafbff;font-size:12px;font-weight:800}
+.daycheck input{width:auto}
+.section-title{font-size:14px;font-weight:850;margin:16px 0 9px;color:#4b5563;text-transform:uppercase;letter-spacing:.04em}
+.setup-note{background:#eef2ff;color:#3730a3;padding:12px 14px;border-radius:14px;font-size:13px;line-height:1.45;margin-top:12px}
+.btn.good{background:#ecfdf3;color:#067647}
+
+@media(max-width:780px){.grid{grid-template-columns:1fr}.topbar{grid-template-columns:1fr 1fr}.topbar .btn{grid-column:1/-1}.summary{grid-template-columns:1fr 1fr}}
+@media(max-width:450px){.header h1{font-size:23px}.pill{display:none}.wrap{padding-left:10px;padding-right:10px}.card{border-radius:18px;padding:14px}.weekdays,.calendar{gap:4px}.day{min-height:76px;padding:6px}.tag{font-size:8px}.formgrid{grid-template-columns:1fr}.person-name{font-size:17px}}
+</style>
+</head>
+<body>
+<header class="header"><div class="header-inner"><div><h1>👥 OFTABAL HR Manager</h1><p>Docházka, výkony a kontrola pro účetní</p></div><div class="pill">Build 006 • local + Turso</div></div></header>
+<main class="wrap">
+<section class="card topbar" data-section="prehled">
+<div class="field"><label>Zaměstnanec</label><select id="emp"></select></div>
+<div class="field"><label>Měsíc</label><input id="monthPicker" type="month"></div><button class="btn primary" id="todayBtn">Dnešní měsíc</button>
+</section>
+<section class="card person" data-section="prehled"><div class="person-left"><div class="avatar" id="avatar"></div><div><div class="person-name" id="personName"></div><div class="small" id="personMeta"></div></div></div><div class="status" id="status">✓ OK</div></section>
+<section class="summary" id="summary" data-section="prehled"></section>
+<section class="card calendar-card" data-section="dochazka">
+<div class="cal-head"><div class="month-title" id="monthTitle"></div><div class="nav"><button id="prevBtn">‹</button><button id="nextBtn">›</button></div></div>
+<div class="actions"><button class="btn primary" id="fillBtn">✨ Vyplnit plán</button><button class="btn danger" id="clearDaysBtn">Vymazat měsíc</button></div>
+<div class="weekdays"><div>Po</div><div>Út</div><div>St</div><div>Čt</div><div>Pá</div><div>So</div><div>Ne</div></div><div class="calendar" id="calendar"></div>
+<p class="note">Po klepnutí na den lze zadat docházku, OCT, počet očí katarakty a přesčas. Sazby se nastavují zvlášť.</p>
+</section>
+<div class="grid" data-section="mzdy">
+<section class="card input-card"><h2 style="margin-top:0">💰 Nastavení výpočtu</h2>
+<div id="zdenkaForm"><div class="formgrid">
+<div class="field"><label>HPP hrubá mzda</label><input id="z_hpp" type="number" value="27500"></div><div class="field"><label>Prémie HPP</label><input id="z_bonus" type="number" value="0"></div>
+<div class="field"><label>DPP hodiny</label><input id="z_hours" type="number" value="0" step=".25"></div><div class="field"><label>Sazba DPP Kč/h</label><input id="z_rate" type="number" value="300"></div>
+<div class="field"><label>Obrat optiky</label><input id="z_turnover" type="number" value="0"></div><div class="field"><label>Provize %</label><input id="z_pct" type="number" value="3"></div>
+<div class="field"><label>Další odměna</label><input id="z_other" type="number" value="0"></div><div class="field"><label>Kontrolní limit DPP</label><input id="z_limit" type="number" value="11990"></div>
+</div></div>
+<div id="lucieForm" class="hidden"><div class="formgrid">
+<div class="field"><label>Sazba běžná Kč/h</label><input id="m_rate" type="number" value="600"></div><div class="field"><label>Sazba přesčas Kč/h</label><input id="m_over_rate" type="number" value="700"></div>
+<div class="field"><label>Bonus OCT %</label><input id="m_oct_pct" type="number" value="15"></div><div class="field"><label>Průměrná cena 1 OCT Kč</label><input id="m_oct_price" type="number" value="1000"></div>
+<div class="field"><label>Bonus za oko Kč</label><input id="m_cat_rate" type="number" value="500"></div><div class="field"><label>Další odměna / korekce</label><input id="m_other" type="number" value="0"></div>
+</div></div>
+<div class="field" style="margin-top:10px"><label>Poznámka pro účetní</label><textarea id="note"></textarea></div>
+<div id="alert" class="alertbox"></div><div class="actions"><button class="btn primary" id="saveBtn">Uložit měsíc</button><button class="btn" id="copyBtn">Kopírovat podklad</button><button class="btn" id="csvBtn">Export CSV</button></div>
+</section>
+<section class="card"><h2 style="margin-top:0">📄 Podklad pro účetní</h2><div id="output" class="output"></div><div class="actions">
+<button class="btn" id="exportBtn">Záloha JSON</button>
+<label class="btn">Obnovit JSON<input id="importFile" type="file" accept="application/json" hidden></label>
+<button class="btn good" id="cloudTestBtn">☁️ Test Turso</button>
+<button class="btn primary" id="cloudSaveBtn">☁️ Uložit online</button>
+<button class="btn" id="cloudLoadBtn">☁️ Načíst online</button>
+</div>
+<div id="cloudStatus" class="setup-note">Cloud: zatím netestováno</div>
+</section>
+</div>
+
+<section class="card hidden" id="settingsSection" data-section="nastaveni">
+<div class="settings-head"><div><h2 style="margin:0">⚙️ Nastavení zaměstnance</h2><div class="small">Všechny částky a pravidla jsou editovatelné.</div></div><button class="btn good" id="newEmpBtn">＋ Nový</button></div>
+<div class="section-title">Základní údaje</div>
+<div class="formgrid">
+<div class="field"><label>Jméno zaměstnance</label><input id="s_name"></div>
+<div class="field"><label>Iniciály</label><input id="s_initials" maxlength="4"></div>
+<div class="field"><label>Typ / úvazek</label><input id="s_contract" placeholder="např. HPP 0,8 + DPP"></div>
+<div class="field"><label>Hodin za pracovní den</label><input id="s_daily" type="number" min="0" step=".25"></div>
+</div>
+<div class="section-title">Pracovní dny</div>
+<div class="days-pick" id="daysPick">
+<label class="daycheck"><input type="checkbox" value="1">Po</label><label class="daycheck"><input type="checkbox" value="2">Út</label><label class="daycheck"><input type="checkbox" value="3">St</label><label class="daycheck"><input type="checkbox" value="4">Čt</label><label class="daycheck"><input type="checkbox" value="5">Pá</label><label class="daycheck"><input type="checkbox" value="6">So</label><label class="daycheck"><input type="checkbox" value="0">Ne</label>
+</div>
+<div class="section-title">HPP</div>
+<div class="switchrow"><input id="s_hpp_on" type="checkbox"><label for="s_hpp_on"><b>Používat HPP</b><br><span class="small">Mzda, prémie a docházka.</span></label></div>
+<div class="formgrid" style="margin-top:10px">
+<div class="field"><label>Hrubá mzda Kč</label><input id="s_hpp_salary" type="number"></div>
+<div class="field"><label>Výchozí prémie Kč</label><input id="s_hpp_bonus" type="number"></div>
+<div class="field"><label>Roční dovolená hodin</label><input id="s_vacation_hours" type="number"></div>
+<div class="field"><label>Sick days ročně</label><input id="s_sick_days" type="number"></div>
+</div>
+<div class="section-title">DPP / DPČ</div>
+<div class="switchrow"><input id="s_dpp_on" type="checkbox"><label for="s_dpp_on"><b>Používat DPP / DPČ</b><br><span class="small">Výchozí hodiny, sazba, provize a kontrolní limit.</span></label></div>
+<div class="formgrid" style="margin-top:10px">
+<div class="field"><label>Výchozí hodiny</label><input id="s_dpp_hours" type="number" step=".25"></div>
+<div class="field"><label>Sazba Kč/h</label><input id="s_dpp_rate" type="number"></div>
+<div class="field"><label>Provize z obratu %</label><input id="s_commission_pct" type="number" step=".1"></div>
+<div class="field"><label>Kontrolní limit Kč</label><input id="s_dpp_limit" type="number"></div>
+</div>
+<div class="section-title">Výkony a bonusy</div>
+<div class="formgrid">
+<div class="field"><label>OCT bonus %</label><input id="s_oct_pct" type="number" step=".1"></div>
+<div class="field"><label>Průměrná cena OCT Kč</label><input id="s_oct_price" type="number"></div>
+<div class="field"><label>Katarakta Kč / oko</label><input id="s_cat_rate" type="number"></div>
+<div class="field"><label>Přesčas Kč / h</label><input id="s_over_rate" type="number"></div>
+</div>
+<div class="setup-note">Nastavení se uloží pouze do tohoto zařízení. Synchronizaci přidáme jako další vrstvu, aniž by se měnila logika kalendáře.</div>
+<div class="actions"><button class="btn primary" id="saveSetupBtn">Uložit nastavení</button><button class="btn danger" id="deleteEmpBtn">Archivovat zaměstnance</button></div>
+</section>
+
+</main>
+<footer class="footer"><div class="footer-inner">
+<div class="footer-item active" data-tab="prehled"><span>🏠</span>Přehled</div><div class="footer-item" data-tab="dochazka"><span>📅</span>Docházka</div><div class="footer-item" data-tab="mzdy"><span>💰</span>Mzdy</div><div class="footer-item" data-tab="nastaveni"><span>⚙️</span>Nastavení</div><div class="footer-item" data-tab="zaloha"><span>💾</span>Záloha</div>
+</div></footer>
+<dialog id="dlg"><div class="dialog-in"><div class="dialog-title" id="dlgTitle"></div>
+<div class="types"><button class="typebtn t-prace" data-type="prace">✅ Práce</button><button class="typebtn t-dovolena" data-type="dovolena">🏖️ Dovolená</button><button class="typebtn t-nemoc" data-type="nemoc">🤒 Nemoc</button><button class="typebtn t-lekar" data-type="lekar">🩺 Lékař</button><button class="typebtn t-skoleni" data-type="skoleni">📚 Školení</button><button class="typebtn" data-type="">❌ Vymazat</button></div>
+<div id="lucieDayFields" class="formgrid" style="margin-top:14px"><div class="field"><label>OCT – počet</label><input id="dayOct" type="number" min="0" step="1" value="0"></div><div class="field"><label>Katarakty – počet očí</label><input id="dayCat" type="number" min="0" step="1" value="0"></div><div class="field"><label>Přesčas hodin</label><input id="dayOver" type="number" min="0" step=".25" value="0"></div></div>
+<div class="close-row"><button class="btn primary" id="saveDay">Uložit den</button><button class="btn" id="closeDlg">Zavřít</button></div></div></dialog>
+<script>
+'use strict';
+
+const TURSO_URL='https://oftabal-oftabal.aws-eu-west-1.turso.io/v2/pipeline';
+const TURSO_TOKEN='eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODU5NTk2NDMsImlkIjoiMDE5ZmQzNzgtYWIwMS03Mjk1LTkxM2YtNjNkODM3ZTQxMzg1Iiwia2lkIjoicm1mdG01TUZZNllRTGs4QXR1TGRnQzRENGlmTDFidFhnSWxlSXF0OU9xZyIsInJpZCI6IjE5ZDNmYjU0LTBkMzUtNGQyOS04MmVhLTJhYzc1MjJiMzZmYyJ9.PdfZDrUyjYJRQNXcLKuloe1puhinzU7rc_hn8bXN8zxozb0t-gGPkKTQkW_6AoUZ9Afa-4qwuSp2Rdd4uvbvCA';
+const CLOUD_APP='hr';
+const CLOUD_KEY='oftabal-hr-build004';
+
+function setCloudStatus(text,ok=true){
+ const el=$('cloudStatus');
+ if(!el)return;
+ el.textContent=text;
+ el.style.background=ok?'#ecfdf3':'#fff1f2';
+ el.style.color=ok?'#067647':'#be123c';
+}
+
+function tursoArg(value){
+ return {type:'text',value:String(value)};
+}
+
+async function tursoQuery(sql,args=[]){
+ const response=await fetch(TURSO_URL,{
+  method:'POST',
+  headers:{
+   'Authorization':`Bearer ${TURSO_TOKEN}`,
+   'Content-Type':'application/json'
+  },
+  body:JSON.stringify({
+   requests:[
+    {type:'execute',stmt:{sql,args:args.map(tursoArg)}},
+    {type:'close'}
+   ]
+  })
+ });
+ let data;
+ try{data=await response.json()}catch{data={}}
+ if(!response.ok)throw new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+ const first=data.results?.[0];
+ if(!first||first.type!=='ok'){
+  throw new Error(first?.error?.message||JSON.stringify(data));
+ }
+ return first.response?.result||{cols:[],rows:[]};
+}
+
+async function testCloud(){
+ setCloudStatus('Cloud: testuji připojení…');
+ try{
+  const result=await tursoQuery('SELECT 1 AS ok');
+  const value=result.rows?.[0]?.[0]?.value;
+  setCloudStatus(value==='1'||value===1?'Cloud: Turso je připojeno ✓':'Cloud: připojeno, neočekávaná odpověď');
+ }catch(err){
+  console.error(err);
+  setCloudStatus('Cloud chyba: '+err.message,false);
+ }
+}
+
+async function saveCloud(){
+ setCloudStatus('Cloud: ukládám…');
+ try{
+  const now=new Date().toISOString();
+  const json=JSON.stringify(DB);
+  await tursoQuery(
+   `INSERT INTO app_data(app,key,json,updated_at)
+    VALUES(?,?,?,?)
+    ON CONFLICT(app,key) DO UPDATE SET
+      json=excluded.json,
+      updated_at=excluded.updated_at`,
+   [CLOUD_APP,CLOUD_KEY,json,now]
+  );
+  setCloudStatus('Cloud: uloženo '+new Date().toLocaleTimeString('cs-CZ')+' ✓');
+ }catch(err){
+  console.error(err);
+  setCloudStatus('Cloud chyba při ukládání: '+err.message,false);
+ }
+}
+
+async function loadCloud(){
+ setCloudStatus('Cloud: načítám…');
+ try{
+  const result=await tursoQuery(
+   'SELECT json,updated_at FROM app_data WHERE app=? AND key=?',
+   [CLOUD_APP,CLOUD_KEY]
+  );
+  const row=result.rows?.[0];
+  if(!row){setCloudStatus('Cloud: zatím nejsou uložená data',false);return;}
+  const json=row[0]?.value;
+  DB=JSON.parse(json);
+  save(DB);
+  refreshEmployeeSelect('zdenka');
+  render();
+  setCloudStatus('Cloud: načteno '+(row[1]?.value||'')+' ✓');
+ }catch(err){
+  console.error(err);
+  setCloudStatus('Cloud chyba při načítání: '+err.message,false);
+ }
+}
+
+const DEFAULT_EMPLOYEES={
+ zdenka:{id:'zdenka',name:'Zdeňka Šmidrkalová',initials:'ZŠ',contract:'HPP 0,8 + DPP optika',daily:6.4,days:[1,2,3,4,5],hppOn:true,hppSalary:27500,hppBonus:0,vacationHours:128,sickDays:0,dppOn:true,dppHours:24,dppRate:300,commissionPct:3,dppLimit:11990,octPct:0,octPrice:0,catRate:0,overRate:0,archived:false},
+ lucie:{id:'lucie',name:'MUDr. Lucie Marschová',initials:'LM',contract:'DPP / odborná práce út + pá',daily:6,days:[2,5],hppOn:false,hppSalary:0,hppBonus:0,vacationHours:0,sickDays:0,dppOn:true,dppHours:0,dppRate:600,commissionPct:0,dppLimit:11990,octPct:15,octPrice:1000,catRate:500,overRate:700,archived:false}
+};
+const TYPES={prace:'Práce',dovolena:'Dovolená',nemoc:'Nemoc',lekar:'Lékař',skoleni:'Školení'};
+const MONTHS=['leden','únor','březen','duben','květen','červen','červenec','srpen','září','říjen','listopad','prosinec'];
+const KEY='oftabal_hr_build004',OLDKEY='oftabal_hr_build003';
+const $=id=>document.getElementById(id);
+let current=new Date();current.setDate(1);let selected='',pendingType='';
+function blankDb(){return{employees:structuredClone(DEFAULT_EMPLOYEES),months:{},company:{name:'OFTABAL s.r.o.'}}}
+function load(){
+ try{
+  const raw=localStorage.getItem(KEY);
+  if(raw){const db=JSON.parse(raw);db.employees??=structuredClone(DEFAULT_EMPLOYEES);db.months??={};return db}
+  const old=localStorage.getItem(OLDKEY),db=blankDb();
+  if(old){const o=JSON.parse(old);db.months=o}
+  save(db);return db;
+ }catch{return blankDb()}
+}
+function save(db){localStorage.setItem(KEY,JSON.stringify(db))}
+let DB=load();
+function employees(){return Object.values(DB.employees).filter(e=>!e.archived)}
+function empId(){return $('emp').value||employees()[0]?.id}
+function employee(){return DB.employees[empId()]||employees()[0]}
+function ym(){return `${current.getFullYear()}-${String(current.getMonth()+1).padStart(2,'0')}`}
+function ensureMonth(){const id=empId();DB.months[id]??={};DB.months[id][ym()]??={days:{},pay:{},note:''};return DB.months[id][ym()]}
+function money(v){return Math.round(Number(v)||0).toLocaleString('cs-CZ')+' Kč'}
+function n(id){return Number($(id)?.value||0)}
+function initials(name){return name.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()}
+function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da)}
+function holiday(dt){const m=dt.getMonth()+1,d=dt.getDate(),fixed={'1-1':'Nový rok','5-1':'Svátek práce','5-8':'Den vítězství','7-5':'Cyril a Metoděj','7-6':'Jan Hus','9-28':'Den české státnosti','10-28':'Vznik Československa','11-17':'Den boje za svobodu','12-24':'Štědrý den','12-25':'1. svátek vánoční','12-26':'2. svátek vánoční'};if(fixed[`${m}-${d}`])return fixed[`${m}-${d}`];const es=easter(dt.getFullYear()),gf=new Date(es),em=new Date(es);gf.setDate(es.getDate()-2);em.setDate(es.getDate()+1);if(dt.toDateString()===gf.toDateString())return'Velký pátek';if(dt.toDateString()===em.toDateString())return'Velikonoční pondělí';return''}
+function key(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`}
+function dayObj(v){return typeof v==='string'?{type:v,oct:0,cat:0,over:0,hours:null}:Object.assign({type:'',oct:0,cat:0,over:0,hours:null},v||{})}
+function refreshEmployeeSelect(preferred){
+ const sel=$('emp'),keep=preferred||sel.value;sel.innerHTML='';
+ employees().forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=e.name;sel.appendChild(o)});
+ if([...sel.options].some(o=>o.value===keep))sel.value=keep;
+}
+function totals(){
+ const d=ensureMonth(),c={prace:0,dovolena:0,nemoc:0,lekar:0,skoleni:0,oct:0,cat:0,over:0,hours:0};
+ Object.values(d.days).forEach(v=>{const x=dayObj(v);if(x.type in c)c[x.type]++;if(x.type==='prace')c.hours+=x.hours===null?employee().daily:+x.hours||0;c.oct+=+x.oct||0;c.cat+=+x.cat||0;c.over+=+x.over||0});
+ return c;
+}
+function readMonthForm(){
+ const d=ensureMonth(),e=employee(),p=d.pay||{};
+ $('z_hpp').value=p.hppSalary??e.hppSalary;$('z_bonus').value=p.hppBonus??e.hppBonus;$('z_hours').value=p.dppHours??e.dppHours;$('z_rate').value=p.dppRate??e.dppRate;$('z_turnover').value=p.turnover??0;$('z_pct').value=p.commissionPct??e.commissionPct;$('z_other').value=p.other??0;$('z_limit').value=p.dppLimit??e.dppLimit;
+ $('m_rate').value=p.dppRate??e.dppRate;$('m_over_rate').value=p.overRate??e.overRate;$('m_oct_pct').value=p.octPct??e.octPct;$('m_oct_price').value=p.octPrice??e.octPrice;$('m_cat_rate').value=p.catRate??e.catRate;$('m_other').value=p.other??0;$('note').value=d.note||'';
+}
+function storeMonthForm(){
+ const d=ensureMonth(),e=employee();d.pay={
+  hppSalary:n('z_hpp'),hppBonus:n('z_bonus'),
+  dppHours:e.octPct||e.catRate||e.overRate?0:n('z_hours'),
+  dppRate:e.octPct||e.catRate||e.overRate?n('m_rate'):n('z_rate'),
+  turnover:n('z_turnover'),commissionPct:n('z_pct'),
+  other:e.octPct||e.catRate||e.overRate?n('m_other'):n('z_other'),
+  dppLimit:n('z_limit'),overRate:n('m_over_rate'),octPct:n('m_oct_pct'),octPrice:n('m_oct_price'),catRate:n('m_cat_rate')
+ };d.note=$('note').value;save(DB)
+}
+function calc(){
+ const e=employee(),c=totals(),d=ensureMonth(),p=d.pay||{};
+ const performanceMode=e.octPct>0||e.catRate>0||e.overRate>0;
+ const dppHours=performanceMode?c.hours:(p.dppHours??e.dppHours);
+ const dppRate=p.dppRate??e.dppRate;
+ const hourly=dppHours*dppRate,commission=(p.turnover||0)*(p.commissionPct??e.commissionPct)/100;
+ const overtime=c.over*(p.overRate??e.overRate),oct=c.oct*(p.octPrice??e.octPrice)*(p.octPct??e.octPct)/100,cat=c.cat*(p.catRate??e.catRate);
+ const other=p.other||0,dppTotal=hourly+commission+overtime+oct+cat+other;
+ return{e,c,dppHours,hourly,commission,overtime,oct,cat,other,dppTotal,hpp:(p.hppSalary??e.hppSalary)+(p.hppBonus??e.hppBonus),limit:p.dppLimit??e.dppLimit,performanceMode}
+}
+function outputText(){
+ const x=calc(),e=x.e,c=x.c,d=ensureMonth(),p=d.pay||{};let s=`OFTABAL s.r.o. – PODKLADY PRO ÚČETNÍ\nObdobí: ${MONTHS[current.getMonth()]} ${current.getFullYear()}\n\n${e.name.toUpperCase()}\n`;
+ if(e.hppOn)s+=`\nHPP\nHrubá mzda: ${money(p.hppSalary??e.hppSalary)}\nPrémie: ${money(p.hppBonus??e.hppBonus)}\nDovolená: ${c.dovolena} dní (${(c.dovolena*e.daily).toLocaleString('cs-CZ')} hodin)\nNemoc: ${c.nemoc} dní\n`;
+ if(e.dppOn){
+  s+=`\nDPP / DPČ\nOdpracováno: ${x.dppHours.toLocaleString('cs-CZ')} hodin\nOdměna za hodiny: ${money(x.hourly)}\n`;
+  if((p.turnover||0)>0||e.commissionPct)s+=`Obrat pro provizi: ${money(p.turnover||0)}\nProvize ${(p.commissionPct??e.commissionPct)} %: ${money(x.commission)}\n`;
+  if(c.over||e.overRate)s+=`Přesčas: ${c.over} hodin = ${money(x.overtime)}\n`;
+  if(c.oct||e.octPct)s+=`OCT: ${c.oct} ks = ${money(x.oct)}\n`;
+  if(c.cat||e.catRate)s+=`Katarakty: ${c.cat} očí = ${money(x.cat)}\n`;
+  s+=`DPP / DPČ celkem: ${money(x.dppTotal)}\n`;
+ }
+ s+=`\nDocházka: práce ${c.prace} dní, dovolená ${c.dovolena}, nemoc ${c.nemoc}, lékař ${c.lekar}, školení ${c.skoleni}\n`;
+ if(d.note?.trim())s+=`\nPoznámka: ${d.note.trim()}`;return s
+}
+function render(){
+ refreshEmployeeSelect(empId());const e=employee();if(!e)return;
+ $('avatar').textContent=e.initials||initials(e.name);$('personName').textContent=e.name;$('personMeta').textContent=e.contract;$('monthPicker').value=ym();$('monthTitle').textContent=`${MONTHS[current.getMonth()]} ${current.getFullYear()}`;
+ const perf=e.octPct>0||e.catRate>0||e.overRate>0;
+ $('zdenkaForm').classList.toggle('hidden',perf);$('lucieForm').classList.toggle('hidden',!perf);
+ readMonthForm();renderCalendar();update();loadSetup();
+}
+function renderCalendar(){
+ const e=employee(),d=ensureMonth(),cal=$('calendar');cal.innerHTML='';const y=current.getFullYear(),m=current.getMonth(),first=new Date(y,m,1),off=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+ for(let i=0;i<off;i++){const x=document.createElement('div');x.className='day empty';cal.appendChild(x)}
+ for(let day=1;day<=days;day++){const dt=new Date(y,m,day),k=key(y,m,day),v=dayObj(d.days[k]),hol=holiday(dt),x=document.createElement('div');x.className='day';if([0,6].includes(dt.getDay()))x.classList.add('weekend');if(hol)x.classList.add('holiday');if(e.days.includes(dt.getDay()))x.classList.add('scheduled');
+  x.innerHTML=`<div class="num">${day}</div>${hol?'<span class="holiday-dot"></span>':''}${(v.oct||v.cat||v.over)?`<div class="metrics">OCT ${v.oct||0}<br>oči ${v.cat||0}${v.over?'<br>+ '+v.over+' h':''}</div>`:''}${v.type?`<div class="tag t-${v.type}">${TYPES[v.type]}</div>`:''}`;
+  x.onclick=()=>openDay(k,day,hol);cal.appendChild(x)
+ }
+}
+function update(){
+ const x=calc(),c=x.c,e=x.e;
+ $('summary').innerHTML=`<div class="tile"><div class="lab">Odpracováno</div><div class="val">${c.hours.toLocaleString('cs-CZ')} h</div><div class="sub">${c.prace} dní</div></div><div class="tile"><div class="lab">Dovolená</div><div class="val">${c.dovolena}</div><div class="sub">${(c.dovolena*e.daily).toLocaleString('cs-CZ')} hodin</div></div><div class="tile"><div class="lab">${e.octPct?'OCT':'Nemoc'}</div><div class="val">${e.octPct?c.oct:c.nemoc}</div><div class="sub">${e.octPct?'počet':'dní'}</div></div><div class="tile"><div class="lab">${e.catRate?'Oči':'DPP celkem'}</div><div class="val">${e.catRate?c.cat:money(x.dppTotal)}</div><div class="sub">${e.catRate?'katarakty':'automatický výpočet'}</div></div>`;
+ $('output').textContent=outputText();
+ let msg='✓ Nastavení a výpočet jsou v pořádku.';if(e.dppOn&&x.limit&&x.dppTotal>x.limit)msg=`⚠️ Odměna ${money(x.dppTotal)} je nad kontrolním limitem ${money(x.limit)}.`;$('alert').textContent=msg;$('status').textContent=msg.startsWith('✓')?'✓ OK':'⚠ Kontrola';storeMonthForm()
+}
+function openDay(k,day,hol){selected=k;const v=dayObj(ensureMonth().days[k]);pendingType=v.type;$('dlgTitle').textContent=`${day}. ${MONTHS[current.getMonth()]} – ${hol||'zápis dne'}`;$('lucieDayFields').classList.remove('hidden');$('dayOct').value=v.oct;$('dayCat').value=v.cat;$('dayOver').value=v.over;$('dlg').showModal()}
+function saveDay(){const d=ensureMonth();if(!pendingType&&!n('dayOct')&&!n('dayCat')&&!n('dayOver'))delete d.days[selected];else d.days[selected]={type:pendingType,oct:n('dayOct'),cat:n('dayCat'),over:n('dayOver'),hours:null};save(DB);$('dlg').close();render()}
+function fillPlan(){const d=ensureMonth(),e=employee(),y=current.getFullYear(),m=current.getMonth(),days=new Date(y,m+1,0).getDate();for(let i=1;i<=days;i++){const dt=new Date(y,m,i);if(e.days.includes(dt.getDay())&&!holiday(dt))d.days[key(y,m,i)]={type:'prace',oct:0,cat:0,over:0,hours:null}}save(DB);render()}
+function loadSetup(){const e=employee();$('s_name').value=e.name;$('s_initials').value=e.initials||'';$('s_contract').value=e.contract||'';$('s_daily').value=e.daily;$('s_hpp_on').checked=!!e.hppOn;$('s_hpp_salary').value=e.hppSalary||0;$('s_hpp_bonus').value=e.hppBonus||0;$('s_vacation_hours').value=e.vacationHours||0;$('s_sick_days').value=e.sickDays||0;$('s_dpp_on').checked=!!e.dppOn;$('s_dpp_hours').value=e.dppHours||0;$('s_dpp_rate').value=e.dppRate||0;$('s_commission_pct').value=e.commissionPct||0;$('s_dpp_limit').value=e.dppLimit||0;$('s_oct_pct').value=e.octPct||0;$('s_oct_price').value=e.octPrice||0;$('s_cat_rate').value=e.catRate||0;$('s_over_rate').value=e.overRate||0;document.querySelectorAll('#daysPick input').forEach(i=>i.checked=e.days.includes(+i.value))}
+function saveSetup(){
+ const e=employee();e.name=$('s_name').value.trim()||'Nový zaměstnanec';e.initials=$('s_initials').value.trim()||initials(e.name);e.contract=$('s_contract').value.trim();e.daily=n('s_daily');e.days=[...document.querySelectorAll('#daysPick input:checked')].map(i=>+i.value);e.hppOn=$('s_hpp_on').checked;e.hppSalary=n('s_hpp_salary');e.hppBonus=n('s_hpp_bonus');e.vacationHours=n('s_vacation_hours');e.sickDays=n('s_sick_days');e.dppOn=$('s_dpp_on').checked;e.dppHours=n('s_dpp_hours');e.dppRate=n('s_dpp_rate');e.commissionPct=n('s_commission_pct');e.dppLimit=n('s_dpp_limit');e.octPct=n('s_oct_pct');e.octPrice=n('s_oct_price');e.catRate=n('s_cat_rate');e.overRate=n('s_over_rate');save(DB);refreshEmployeeSelect(e.id);render();alert('Nastavení uloženo.')
+}
+function newEmployee(){const id='emp_'+Date.now();DB.employees[id]={id,name:'Nový zaměstnanec',initials:'NZ',contract:'',daily:8,days:[1,2,3,4,5],hppOn:true,hppSalary:0,hppBonus:0,vacationHours:160,sickDays:0,dppOn:false,dppHours:0,dppRate:0,commissionPct:0,dppLimit:11990,octPct:0,octPrice:0,catRate:0,overRate:0,archived:false};save(DB);refreshEmployeeSelect(id);$('emp').value=id;render();document.querySelector('[data-tab="nastaveni"]').click()}
+function exportCSV(){const x=calc(),c=x.c,rows=[['Období',ym()],['Zaměstnanec',x.e.name],['Odpracované hodiny',c.hours],['Práce dny',c.prace],['Dovolená dny',c.dovolena],['Nemoc dny',c.nemoc],['OCT počet',c.oct],['Katarakty oči',c.cat],['Přesčas hodiny',c.over],['DPP/DPČ celkem',x.dppTotal]];const csv='\uFEFF'+rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n'),b=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`OFTABAL_${empId()}_${ym()}.csv`;a.click()}
+refreshEmployeeSelect('zdenka');
+$('emp').onchange=render;$('monthPicker').onchange=e=>{const[y,m]=e.target.value.split('-').map(Number);current=new Date(y,m-1,1);render()};$('todayBtn').onclick=()=>{current=new Date();current.setDate(1);render()};$('prevBtn').onclick=()=>{current.setMonth(current.getMonth()-1);render()};$('nextBtn').onclick=()=>{current.setMonth(current.getMonth()+1);render()};$('fillBtn').onclick=fillPlan;$('clearDaysBtn').onclick=()=>{if(confirm('Vymazat tento měsíc?')){ensureMonth().days={};save(DB);render()}};$('saveBtn').onclick=()=>{storeMonthForm();update();alert('Uloženo.')};$('copyBtn').onclick=async()=>{await navigator.clipboard.writeText(outputText());alert('Zkopírováno.')};$('csvBtn').onclick=exportCSV;$('exportBtn').onclick=()=>{const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='oftabal_hr_build004_zaloha.json';a.click()};$('importFile').onchange=e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{DB=JSON.parse(r.result);save(DB);refreshEmployeeSelect();render();alert('Obnoveno.')}catch{alert('Neplatný soubor.')}};r.readAsText(f)};$('closeDlg').onclick=()=>$('dlg').close();$('saveDay').onclick=saveDay;document.querySelectorAll('.typebtn').forEach(b=>b.onclick=()=>{pendingType=b.dataset.type;document.querySelectorAll('.typebtn').forEach(x=>x.style.outline='');b.style.outline='3px solid #5b5ce2'});document.querySelectorAll('#zdenkaForm input,#lucieForm input,#note').forEach(x=>x.addEventListener('input',update));$('saveSetupBtn').onclick=saveSetup;$('newEmpBtn').onclick=newEmployee;$('deleteEmpBtn').onclick=()=>{if(employees().length<=1)return alert('Musí zůstat alespoň jeden zaměstnanec.');if(confirm('Archivovat tohoto zaměstnance?')){employee().archived=true;save(DB);refreshEmployeeSelect();render()}};
+document.querySelectorAll('.footer-item').forEach(i=>i.onclick=()=>{document.querySelectorAll('.footer-item').forEach(x=>x.classList.remove('active'));i.classList.add('active');document.querySelectorAll('[data-section]').forEach(s=>s.classList.add('hidden'));const tab=i.dataset.tab;if(tab==='prehled'){document.querySelectorAll('[data-section="prehled"]').forEach(s=>s.classList.remove('hidden'))}else if(tab==='dochazka'){document.querySelectorAll('[data-section="dochazka"]').forEach(s=>s.classList.remove('hidden'))}else if(tab==='mzdy'||tab==='zaloha'){document.querySelectorAll('[data-section="mzdy"]').forEach(s=>s.classList.remove('hidden'))}else if(tab==='nastaveni'){document.querySelectorAll('[data-section="nastaveni"]').forEach(s=>s.classList.remove('hidden'));loadSetup()}window.scrollTo({top:0,behavior:'smooth'})});
+$('cloudTestBtn').onclick=testCloud;
+$('cloudSaveBtn').onclick=saveCloud;
+$('cloudLoadBtn').onclick=loadCloud;
+render();
+</script></body></html>
