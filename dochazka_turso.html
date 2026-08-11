@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Docházka – OFTABAL</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;max-width:720px;margin:32px auto;padding:0 18px;color:#202124}
+h1{font-size:25px;margin-bottom:5px}h2{font-size:19px;margin:0 0 9px}
+.card{border:1px solid #ddd;border-radius:14px;padding:18px;margin:17px 0}
+.muted{color:#70757a;font-size:13px}.regular{font-weight:700}select{font:inherit;padding:8px;border:1px solid #ccc;border-radius:8px}
+ul{padding-left:22px}li{margin:8px 0}.ok{color:#16733a}.err{color:#a61b1b}
+</style></head><body>
+<h1>Docházka zaměstnanců</h1><div class="muted">OFTABAL s.r.o. · přehled odchylek od pravidelné směny</div>
+<p>Měsíc: <select id="month"></select></p><div id="status" class="muted">Načítám data…</div><div id="content"></div>
+<script>
+const TURSO_URL='https://oftabal-oftabal.aws-eu-west-1.turso.io/v2/pipeline',TURSO_TOKEN='eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODU5NTk2NDMsImlkIjoiMDE5ZmQzNzgtYWIwMS03Mjk1LTkxM2YtNjNkODM3ZTQxMzg1Iiwia2lkIjoicm1mdG01TUZZNllRTGs4QXR1TGRnQzRENGlmTDFidFhnSWxlSXF0OU9xZyIsInJpZCI6IjE5ZDNmYjU0LTBkMzUtNGQyOS04MmVhLTJhYzc1MjJiMzZmYyJ9.PdfZDrUyjYJRQNXcLKuloe1puhinzU7rc_hn8bXN8zxozb0t-gGPkKTQkW_6AoUZ9Afa-4qwuSp2Rdd4uvbvCA',CLOUD_APP='hr',CLOUD_KEY='oftabal-hr-build004';
+const TYPES={dovolena:'Dovolená',nemoc:'Nemoc',lekar:'Lékař',skoleni:'Školení',neplacene:'Neplacené volno'};
+let DB;
+function v(x){return x&&typeof x==='object'&&'value'in x?x.value:x}
+async function q(sql,args=[]){
+ const r=await fetch(TURSO_URL,{method:'POST',headers:{Authorization:'Bearer '+TURSO_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({requests:[{type:'execute',stmt:{sql,args:args.map(x=>({type:'text',value:String(x)}))}},{type:'close'}]})});
+ const j=await r.json();if(!r.ok)throw Error('HTTP '+r.status);return j.results?.[0]?.response?.result
+}
+function holidays(y){
+ const fixed=['01-01','05-01','05-08','07-05','07-06','09-28','10-28','11-17','12-24','12-25','12-26'];
+ function easter(Y){let a=Y%19,b=Math.floor(Y/100),c=Y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),day=(h+l-7*m+114)%31+1;return new Date(Y,mo-1,day)}
+ let E=easter(y), gf=new Date(E);gf.setDate(E.getDate()-2), em=new Date(E);em.setDate(E.getDate()+1);
+ const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ return new Set(fixed.map(x=>y+'-'+x).concat([iso(gf),iso(em)]));
+}
+function fmt(d){return new Date(d+'T12:00:00').toLocaleDateString('cs-CZ')}
+function scheduleText(e){return (e.days||[]).map(x=>['Ne','Po','Út','St','Čt','Pá','So'][x]).join(' + ')+' · '+(e.daily||'')+' h'}
+function deviations(id,m){
+ const e=DB.employees?.[id];if(!e)return[];
+ const [y,mo]=m.split('-').map(Number), H=holidays(y), days=DB.months?.[id]?.[m]?.days||{}, out=[];
+ const last=new Date(y,mo,0).getDate();
+ for(let n=1;n<=last;n++){
+   const d=m+'-'+String(n).padStart(2,'0'), dow=new Date(y,mo-1,n).getDay(), scheduled=(e.days||[]).includes(dow), x=days[d];
+   if(scheduled && H.has(d)){
+     out.push([d,'Svátek – náhrada '+(e.daily||0)+' h']);
+     continue;
+   }
+   if(x?.type && x.type!=='prace'){
+     out.push([d,(TYPES[x.type]||x.type)+' – '+(x.hours||e.daily||0)+' h']);
+     continue;
+   }
+   if(scheduled && x?.type==='prace' && x.hours!=null && Number(x.hours)!==Number(e.daily)){
+     out.push([d,'Práce '+x.hours+' h (místo '+e.daily+' h)']);
+     continue;
+   }
+   if(!scheduled && x?.type==='prace'){
+     out.push([d,'Práce mimo pravidelnou směnu'+(x.hours?' – '+x.hours+' h':'')]);
+   }
+ }
+ return out;
+}
+function card(id,name,m){
+ const e=DB.employees?.[id], a=deviations(id,m);
+ return `<section class="card"><h2>${name}</h2><div>Pravidelné směny: <span class="regular">${scheduleText(e)}</span></div>
+ <div class="muted" style="margin-top:13px">Všechny odchylky od plné pravidelné směny:</div>
+ ${a.length?'<ul>'+a.map(x=>`<li><b>${fmt(x[0])}</b> – ${x[1]}</li>`).join('')+'</ul>':'<p>Žádné – všechny pravidelné směny byly plné.</p>'}</section>`
+}
+function render(){let m=month.value;content.innerHTML=card('lucie','MUDr. Lucie Marschová',m)+card('zdenka','Zdeňka Šmidrkalová',m)}
+async function load(){
+ const r=await q('SELECT json FROM app_data WHERE app=? AND key=?',[CLOUD_APP,CLOUD_KEY]);DB=JSON.parse(v(r.rows[0][0]));
+ let s=new Set();Object.values(DB.months||{}).forEach(x=>Object.keys(x||{}).forEach(m=>s.add(m)));
+ let now=new Date(),cur=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');s.add(cur);
+ [...s].sort().reverse().forEach(m=>{let o=document.createElement('option');o.value=m;let [y,mm]=m.split('-');o.textContent=new Date(+y,+mm-1).toLocaleDateString('cs-CZ',{month:'long',year:'numeric'});month.appendChild(o)});month.value=cur;month.onchange=render;render();status.textContent='✓ Aktuální HR data';status.className='muted ok'
+}
+load().catch(e=>{status.textContent='Chyba načtení: '+e.message;status.className='muted err'});
+</script></body></html>
